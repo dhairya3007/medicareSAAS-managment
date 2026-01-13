@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card border-success">
+                <div class="card-body py-5">
+                    <div class="text-success mb-4">
+                        <i class="fas fa-check-circle fa-5x"></i>
+                    </div>
+                    
+                    <h1 class="text-success mb-3">Order Successful!</h1>
+                    <p class="lead mb-4">Thank you for your purchase. Your order has been placed successfully.</p>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5>Order Details</h5>
+                            <p><strong>Order #:</strong> {{ order.id }}</p>
+                            <p><strong>Total Amount:</strong> ₹{{ order.final_amount }}</p>
+                            <p><strong>Order Date:</strong> {{ order.order_date|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'profile' %}" class="btn btn-outline-primary me-md-2">
+                            View Order History
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

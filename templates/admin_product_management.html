@@ -1,0 +1,903 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-2 px-sm-3 px-md-4 py-3 py-md-4">
+    <div class="row g-3 g-md-4">
+        <!-- Add Medicine Card -->
+        <div class="col-12">
+            <!-- Product Count Badge - Above Card -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary rounded-pill shadow-sm px-3 py-2">
+                    <i class="fas fa-pills me-1"></i>
+                    <span class="fw-bold">{{ medicines.count }}</span> Products
+                </span>
+            </div>
+            
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-success text-white rounded-top-4 py-2 py-md-3 px-3 px-md-4">
+                    <h5 class="mb-0 fs-6 fs-md-5">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Medicine
+                    </h5>
+                </div>
+                <div class="card-body p-3 p-md-4">
+                    <form id="addMedicineForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-2 g-md-3">
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Medicine Name</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Company Name</label>
+                                {{ form.company_name }}
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Power/Strength</label>
+                                {{ form.power }}
+                            </div>
+                            <div class="col-6 col-sm-4 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Product Number</label>
+                                {{ form.product_number }}
+                            </div>
+                            <div class="col-6 col-sm-4 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Quantity</label>
+                                {{ form.quantity }}
+                            </div>
+                            <div class="col-12 col-sm-4 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Price (₹)</label>
+                                {{ form.price }}
+                            </div>
+                            <!-- NEW ROW: Enhanced Fields -->
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Category</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Supplier</label>
+                                {{ form.supplier }}
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Batch Number</label>
+                                {{ form.batch_number }}
+                            </div>
+                            
+                            <!-- NEW ROW: More Enhanced Fields -->
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Expiry Date</label>
+                                {{ form.expiry_date }}
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold small mb-1">Low Stock Threshold</label>
+                                {{ form.low_stock_threshold }}
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <label class="form-label fw-semibold small mb-1">Components/Ingredients</label>
+                                {{ form.components }}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-semibold small mb-1">Product Image</label>
+                                {{ form.image }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-success px-4 py-2 rounded-pill">
+                                <i class="fas fa-save me-2"></i>Add Medicine
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- All Medicines Card -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4 py-2 py-md-3 px-3 px-md-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fs-6 fs-md-5">
+                            <i class="fas fa-list me-2"></i>All Medicines
+                        </h5>
+                        <div class="filter-badges">
+                            <span class="badge bg-light text-dark">
+                                Total: <strong>{{ total_count }}</strong>
+                            </span>
+                            <span class="badge bg-warning text-dark">
+                                Low Stock: <strong>{{ low_stock_count }}</strong>
+                            </span>
+                            <span class="badge bg-danger">
+                                Expired: <strong>{{ expired_count }}</strong>
+                            </span>
+                            <span class="badge bg-secondary">
+                                Out of Stock: <strong>{{ out_of_stock_count }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ADD FILTER BUTTONS HERE -->
+                <div class="card-body border-bottom p-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="filter-buttons">
+                                <small class="text-muted me-2 fw-bold">Filter:</small>
+                                <a href="?filter=all" 
+                                class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1 mb-1">
+                                    <i class="fas fa-layer-group me-1"></i>All Medicines
+                                </a>
+                                <a href="?filter=expired" 
+                                class="btn btn-sm {% if current_filter == 'expired' %}btn-danger{% else %}btn-outline-danger{% endif %} me-1 mb-1">
+                                    <i class="fas fa-calendar-times me-1"></i>Expired
+                                    {% if expired_count > 0 %}
+                                    <span class="badge bg-white text-danger ms-1">{{ expired_count }}</span>
+                                    {% endif %}
+                                </a>
+                                <a href="?filter=low_stock" 
+                                class="btn btn-sm {% if current_filter == 'low_stock' %}btn-warning{% else %}btn-outline-warning{% endif %} me-1 mb-1">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
+                                    {% if low_stock_count > 0 %}
+                                    <span class="badge bg-white text-warning ms-1">{{ low_stock_count }}</span>
+                                    {% endif %}
+                                </a>
+                                <a href="?filter=out_of_stock" 
+                                class="btn btn-sm {% if current_filter == 'out_of_stock' %}btn-secondary{% else %}btn-outline-secondary{% endif %} me-1 mb-1">
+                                    <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    {% if out_of_stock_count > 0 %}
+                                    <span class="badge bg-white text-secondary ms-1">{{ out_of_stock_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <small class="text-muted">
+                                <i class="fas fa-filter me-1"></i>
+                                Showing: 
+                                <strong>
+                                    {% if current_filter == 'all' %}
+                                        All Medicines
+                                    {% elif current_filter == 'expired' %}
+                                        Expired Medicines
+                                    {% elif current_filter == 'low_stock' %}
+                                        Low Stock Medicines  
+                                    {% elif current_filter == 'out_of_stock' %}
+                                        Out of Stock Medicines
+                                    {% endif %}
+                                </strong>
+                                ({{ medicines.count }} items)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    <!-- Desktop Table View -->
+                    <div class="d-none d-lg-block">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="medicineTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0 py-3 px-3">Image</th>
+                                        <th class="border-0 py-3">Name</th>
+                                        <th class="border-0 py-3">Company</th>
+                                        <th class="border-0 py-3">Category</th>  <!-- NEW -->
+                                        <th class="border-0 py-3">Power</th>
+                                        <th class="border-0 py-3">Price</th>
+                                        <th class="border-0 py-3">Quantity</th>
+                                         <!-- ADD EXPIRY DATE COLUMN -->
+                                        <th class="border-0 py-3">Expiry Date</th>
+                                        <th class="border-0 py-3">Status</th>
+                                        <th class="border-0 py-3 px-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for medicine in medicines %}
+                                    <tr id="medicine-{{ medicine.id }}" class="border-bottom {% if medicine.is_expired %}table-danger{% elif medicine.is_low_stock %}table-warning{% endif %}">
+                                        <td class="py-3 px-3">
+                                            {% if medicine.image %}
+                                            <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}" 
+                                                class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center rounded-3" 
+                                                style="width: 60px; height: 60px;">
+                                                <i class="fas fa-pills text-muted fs-4"></i>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-3">
+                                            <input type="text" class="form-control form-control-sm rounded-3" 
+                                                value="{{ medicine.name }}" data-field="name"
+                                                data-id="{{ medicine.id }}">
+                                        </td>
+                                        <td class="py-3">
+                                            <input type="text" class="form-control form-control-sm rounded-3" 
+                                                value="{{ medicine.company_name }}" data-field="company_name"
+                                                data-id="{{ medicine.id }}">
+                                        </td>
+                                        <td class="py-3">
+                                            <!-- Category field -->
+                                            <select class="form-control form-control-sm rounded-3" data-field="category" data-id="{{ medicine.id }}">
+                                                <option value="">No Category</option>
+                                                {% for category in categories %}
+                                                <option value="{{ category.id }}" {% if medicine.category.id == category.id %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="py-3">
+                                            <input type="text" class="form-control form-control-sm rounded-3" 
+                                                value="{{ medicine.power }}" data-field="power"
+                                                data-id="{{ medicine.id }}">
+                                        </td>
+                                        <td class="py-3">
+                                            <input type="number" step="0.01" class="form-control form-control-sm rounded-3" 
+                                                value="{{ medicine.price }}" data-field="price"
+                                                data-id="{{ medicine.id }}">
+                                        </td>
+                                        <td class="py-3">
+                                            <input type="number" class="form-control form-control-sm rounded-3" 
+                                                value="{{ medicine.quantity }}" data-field="quantity"
+                                                data-id="{{ medicine.id }}">
+                                        </td>
+                                        <!-- ADD EXPIRY DATE FIELD -->
+                                        <td class="py-3">
+                                            {% if medicine.expiry_date %}
+                                                <input type="date" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.expiry_date|date:'Y-m-d' }}" data-field="expiry_date"
+                                                    data-id="{{ medicine.id }}">
+                                                {% if medicine.is_expired %}
+                                                    <small class="text-danger">
+                                                        <i class="fas fa-exclamation-circle"></i> Expired
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <input type="date" class="form-control form-control-sm rounded-3" 
+                                                    data-field="expiry_date" data-id="{{ medicine.id }}"
+                                                    placeholder="No expiry">
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-3">
+                                            {% if medicine.quantity == 0 %}
+                                                <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                                            {% elif medicine.is_low_stock %}
+                                                <span class="badge bg-warning rounded-pill">Low Stock</span>
+                                            {% elif medicine.is_expired %}
+                                                <span class="badge bg-danger rounded-pill">Expired</span>
+                                            {% else %}
+                                                <span class="badge bg-success rounded-pill">In Stock</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-3 px-3">
+                                            <div class="action-buttons d-flex gap-2">
+                                                <button class="btn btn-sm btn-primary save-btn rounded-3" data-id="{{ medicine.id }}" data-bs-toggle="tooltip" title="Save Changes">
+                                                    <i class="fas fa-save"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger delete-btn rounded-3" data-id="{{ medicine.id }}" data-bs-toggle="tooltip" title="Delete Medicine">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Card View -->
+                    <div class="d-lg-none p-2 p-sm-3">
+                        <div class="row g-2 g-sm-3">
+                            {% for medicine in medicines %}
+                            <div class="col-12">
+                                <div class="card border shadow-sm rounded-4 mobile-medicine-card" id="mobile-medicine-{{ medicine.id }}">
+                                    <div class="card-body p-3">
+                                        <!-- Header with Image and Status -->
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3 flex-shrink-0">
+                                                {% if medicine.image %}
+                                                <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}" 
+                                                    class="rounded-3" style="width: 70px; height: 70px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center rounded-3" 
+                                                    style="width: 70px; height: 70px;">
+                                                    <i class="fas fa-pills text-muted fs-3"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="mb-2">
+                                                    {% if medicine.quantity == 0 %}
+                                                        <span class="badge bg-danger rounded-pill status-badge">Out of Stock</span>
+                                                    {% elif medicine.is_low_stock %}
+                                                        <span class="badge bg-warning rounded-pill status-badge">Low Stock</span>
+                                                    {% elif medicine.is_expired %}
+                                                        <span class="badge bg-danger rounded-pill status-badge">Expired</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success rounded-pill status-badge">In Stock</span>
+                                                    {% endif %}
+                                                    {% if medicine.is_expired %}
+                                                        <small class="text-danger d-block mt-1">
+                                                            <i class="fas fa-exclamation-circle"></i> Expired on {{ medicine.expiry_date }}
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="action-buttons d-flex gap-2">
+                                                    <button class="btn btn-sm btn-primary save-btn rounded-3 flex-fill" data-id="{{ medicine.id }}">
+                                                        <i class="fas fa-save me-1"></i>Save
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger delete-btn rounded-3" data-id="{{ medicine.id }}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Form Fields -->
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Medicine Name</label>
+                                                <input type="text" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.name }}" data-field="name"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Company</label>
+                                                <input type="text" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.company_name }}" data-field="company_name"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Category</label>
+                                                <select class="form-control form-control-sm rounded-3" data-field="category" data-id="{{ medicine.id }}">
+                                                    <option value="">No Category</option>
+                                                    {% for category in categories %}
+                                                    <option value="{{ category.id }}" {% if medicine.category.id == category.id %}selected{% endif %}>
+                                                        {{ category.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Power</label>
+                                                <input type="text" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.power }}" data-field="power"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Price (₹)</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.price }}" data-field="price"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Quantity</label>
+                                                <input type="number" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.quantity }}" data-field="quantity"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                            <!-- ADD EXPIRY DATE TO MOBILE VIEW -->
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold small text-muted mb-1">Expiry Date</label>
+                                                <input type="date" class="form-control form-control-sm rounded-3" 
+                                                    value="{{ medicine.expiry_date|date:'Y-m-d' }}" data-field="expiry_date"
+                                                    data-id="{{ medicine.id }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-white border-0">
+            <i class="fas fa-bell me-2" id="toast-icon"></i>
+            <strong class="me-auto" id="toast-title">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body bg-light" id="toast-message"></div>
+    </div>
+</div>
+
+<style>
+    /* Filter Button Styles */
+.filter-buttons .btn {
+    border-radius: 20px;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.filter-badges .badge {
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+/* Table row highlighting */
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Mobile card border highlighting */
+.border-danger {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+/* Responsive filter buttons */
+@media (max-width: 768px) {
+    .filter-buttons .btn {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-badges {
+        display: none;
+    }
+}
+    /* Product Count Badge */
+    .badge {
+        font-size: 0.9rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Enhanced Table Styling */
+    .table input {
+        border: 1px solid #dee2e6;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+    
+    .table input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    .save-btn, .delete-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+    
+    .delete-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        align-items: center;
+    }
+    
+    /* Mobile Card Styling */
+    .mobile-medicine-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    
+    .mobile-medicine-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .mobile-medicine-card .form-control {
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+    
+    .mobile-medicine-card .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+    
+    .mobile-medicine-card .form-label {
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    /* Card Headers */
+    .card-header {
+        border: none;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Responsive Form Grid */
+    @media (max-width: 768px) {
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.65rem !important;
+        }
+        
+        .mobile-medicine-card .btn {
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .container-fluid {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .py-3 {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1.5rem !important;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem !important;
+        }
+    }
+    
+    /* Enhanced Toast */
+    .toast {
+        min-width: 350px;
+    }
+    
+    .toast-header {
+        padding: 1rem;
+    }
+    
+    .toast-body {
+        padding: 1rem;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 576px) {
+        .toast {
+            min-width: 280px;
+        }
+    }
+    
+    /* Loading Animation */
+    .btn.loading {
+        position: relative;
+        color: transparent;
+        pointer-events: none;
+    }
+    
+    .btn.loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 18px;
+        height: 18px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+    
+    @keyframes spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    /* Smooth Transitions */
+    .card, .btn, .form-control, .badge {
+        transition: all 0.3s ease;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toastEl = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastEl);
+        
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        function showToast(title, message, type = 'info') {
+            const icon = document.getElementById('toast-icon');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMessage = document.getElementById('toast-message');
+            const toastHeader = document.querySelector('.toast-header');
+            const toastBody = document.querySelector('.toast-body');
+            
+            // Set icon and color based on type
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle me-2 text-success';
+                toastHeader.classList.remove('bg-danger', 'bg-info');
+                toastHeader.classList.add('bg-success');
+                toastBody.classList.remove('bg-light');
+                toastBody.classList.add('bg-success', 'bg-opacity-10');
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle me-2 text-danger';
+                toastHeader.classList.remove('bg-success', 'bg-info');
+                toastHeader.classList.add('bg-danger');
+                toastBody.classList.remove('bg-light');
+                toastBody.classList.add('bg-danger', 'bg-opacity-10');
+            } else {
+                icon.className = 'fas fa-info-circle me-2 text-info';
+                toastHeader.classList.remove('bg-success', 'bg-danger');
+                toastHeader.classList.add('bg-info');
+                toastBody.classList.remove('bg-light');
+                toastBody.classList.add('bg-info', 'bg-opacity-10');
+            }
+            
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            toast.show();
+        }
+        
+        function addLoadingState(button) {
+            button.classList.add('loading');
+            button.disabled = true;
+        }
+        
+        function removeLoadingState(button) {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+        
+        // Add medicine form submission
+        document.getElementById('addMedicineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            addLoadingState(submitBtn);
+            
+            const formData = new FormData(this);
+            
+            fetch('{% url "api_add_medicine" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                removeLoadingState(submitBtn);
+                if (data.status === 'success') {
+                    showToast('Success', data.message, 'success');
+                    this.reset();
+                    // Reload the page to see the new medicine
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Error', data.message, 'error');
+                    if (data.errors) {
+                        console.error('Form errors:', data.errors);
+                    }
+                }
+            })
+            .catch(error => {
+                removeLoadingState(submitBtn);
+                showToast('Error', 'An error occurred while adding the medicine', 'error');
+                console.error('Error:', error);
+            });
+        });
+        
+        // Save button click handler for both desktop and mobile
+        // Save button click handler for both desktop and mobile
+function handleSaveClick(button) {
+    addLoadingState(button);
+    
+    const medicineId = button.getAttribute('data-id');
+    const isMobile = button.closest('.mobile-medicine-card') !== null;
+    const container = isMobile ? 
+        document.getElementById(`mobile-medicine-${medicineId}`) : 
+        document.getElementById(`medicine-${medicineId}`);
+    
+    const data = {
+        name: container.querySelector('[data-field="name"]').value,
+        company_name: container.querySelector('[data-field="company_name"]').value,
+        power: container.querySelector('[data-field="power"]').value,
+        price: container.querySelector('[data-field="price"]').value,
+        quantity: container.querySelector('[data-field="quantity"]').value,
+        // ADD THESE NEW FIELDS:
+        category: container.querySelector('[data-field="category"]')?.value || '',
+        supplier: container.querySelector('[data-field="supplier"]')?.value || '',
+        batch_number: container.querySelector('[data-field="batch_number"]')?.value || '',
+        expiry_date: container.querySelector('[data-field="expiry_date"]')?.value || '',
+        low_stock_threshold: container.querySelector('[data-field="low_stock_threshold"]')?.value || 10,
+    };
+    
+    fetch(`/api/medicine/${medicineId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        removeLoadingState(button);
+        if (data.status === 'success') {
+            showToast('Success', data.message, 'success');
+            // Update status badges in both views
+            updateStatusBadges(medicineId, parseInt(data.medicine.quantity));
+        } else {
+            showToast('Error', data.message, 'error');
+        }
+    })
+    .catch(error => {
+        removeLoadingState(button);
+        showToast('Error', 'An error occurred while updating the medicine', 'error');
+        console.error('Error:', error);
+    });
+}
+        
+        // Delete button click handler for both desktop and mobile
+        function handleDeleteClick(button) {
+            const medicineId = button.getAttribute('data-id');
+            
+            if (confirm('Are you sure you want to delete this medicine?')) {
+                addLoadingState(button);
+                
+                fetch(`/api/medicine/${medicineId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    removeLoadingState(button);
+                    if (data.status === 'success') {
+                        showToast('Success', data.message, 'success');
+                        // Remove the rows from both views
+                        const desktopRow = document.getElementById(`medicine-${medicineId}`);
+                        const mobileCard = document.getElementById(`mobile-medicine-${medicineId}`);
+                        
+                        if (desktopRow) {
+                            desktopRow.style.animation = 'fadeOut 0.5s ease-out';
+                            setTimeout(() => desktopRow.remove(), 500);
+                        }
+                        if (mobileCard) {
+                            mobileCard.style.animation = 'fadeOut 0.5s ease-out';
+                            setTimeout(() => mobileCard.closest('.col-12').remove(), 500);
+                        }
+                        
+                        // Update product count
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    removeLoadingState(button);
+                    showToast('Error', 'An error occurred while deleting the medicine', 'error');
+                    console.error('Error:', error);
+                });
+            }
+        }
+        
+        // Update status badges in both views
+        // Update status badges in both views
+function updateStatusBadges(medicineId, quantity) {
+    let badgeClass, badgeText;
+    
+    if (quantity > 10) {
+        badgeClass = 'badge bg-success rounded-pill';
+        badgeText = 'In Stock';
+    } else if (quantity > 0) {
+        badgeClass = 'badge bg-warning rounded-pill';
+        badgeText = 'Low Stock';
+    } else {
+        badgeClass = 'badge bg-danger rounded-pill';
+        badgeText = 'Out of Stock';
+    }
+    
+    // Update desktop view
+     const desktopRow = document.getElementById(`medicine-${medicineId}`);
+    if (desktopRow) {
+        const statusCell = desktopRow.querySelector('td:nth-child(9)'); // CHANGED FROM 8 TO 9
+        if (statusCell) {
+            statusCell.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
+        }
+    }
+    
+    // Update mobile view
+    const mobileCard = document.getElementById(`mobile-medicine-${medicineId}`);
+    if (mobileCard) {
+        const statusBadge = mobileCard.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.className = `${badgeClass} status-badge`;
+            statusBadge.textContent = badgeText;
+        }
+    }
+}
+        
+        // Attach event listeners to all save and delete buttons
+        document.querySelectorAll('.save-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                handleSaveClick(this);
+            });
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                handleDeleteClick(this);
+            });
+        });
+        
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Add fadeOut animation
+        const fadeOutStyle = document.createElement('style');
+        fadeOutStyle.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(fadeOutStyle);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+username ds
+passwrods Dhairya@3007
+
+C:\Users\HP\OneDrive\Desktop\medical_shop-main\.venv
+.\.venv\Scripts\Activate
+python manage.py runserver

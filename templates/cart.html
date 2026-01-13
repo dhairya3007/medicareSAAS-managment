@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .cart-container {
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: calc(100vh - 80px);
+    }
+
+    .cart-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .cart-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        border: none;
+        overflow: hidden;
+    }
+
+    .cart-card-body {
+        padding: 2rem;
+    }
+
+    .cart-item {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .cart-item:hover {
+        background: var(--light-color);
+        margin: 0 -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        border-radius: 12px;
+    }
+
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: var(--shadow-sm);
+        border: 2px solid var(--border-color);
+    }
+
+    .product-details h5 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .product-company {
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .product-power {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        background: var(--light-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .product-price {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+   .quantity-input {
+    width: 80px; /* increased from 60px */
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    text-align: center;
+    font-weight: 600;
+    font-size: 1rem; /* slightly larger font */
+}
+    .quantity-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+   .action-btn {
+    width: 44px; /* increased size */
+    height: 44px; /* increased size */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 1.2rem; /* icon slightly larger */
+}
+
+    .update-btn {
+        background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .update-btn:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .delete-btn {
+        background: linear-gradient(135deg, var(--danger-color), #f87171);
+        color: white;
+        border-color: var(--danger-color);
+    }
+
+    .delete-btn:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, white 0%, #f8fafc 100%);
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        border: none;
+        position: sticky;
+        top: 100px;
+    }
+
+    .summary-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        font-size: 0.95rem;
+    }
+
+    .summary-item span:first-child {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .summary-item span:last-child {
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        padding: 1rem 0;
+        border-top: 2px solid var(--border-color);
+        margin-top: 1rem;
+    }
+
+    .checkout-btn {
+        background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+        border: none;
+        border-radius: 12px;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .continue-btn {
+        border: 2px solid var(--border-color);
+        color: var(--text-muted);
+        background: white;
+        border-radius: 12px;
+        padding: 0.875rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .continue-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: var(--light-color);
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow-md);
+        margin: 2rem auto;
+        max-width: 500px;
+    }
+
+    .empty-cart-icon {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        opacity: 0.7;
+    }
+
+    .empty-cart h3 {
+        color: var(--dark-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .empty-cart p {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .browse-btn {
+        background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+        border: none;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .browse-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (max-width: 768px) {
+        .cart-title {
+            font-size: 2rem;
+        }
+        
+        .cart-item {
+            padding: 1rem 0;
+        }
+        
+        .product-image {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .quantity-input {
+        width: 100%; /* full width on small screens */
+        font-size: 1.1rem;
+    }
+
+    .action-btn {
+        width: 100%; /* buttons full width on mobile for easier tapping */
+        height: 45px; /* slightly taller */
+        font-size: 1.2rem;
+    }
+
+    .quantity-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+        
+        .summary-card {
+            position: static;
+            margin-top: 2rem;
+        }
+    }
+</style>
+
+<div class="cart-container">
+    <div class="container">
+        <h1 class="cart-title">Shopping Cart</h1>
+        
+        {% if cart_items %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card cart-card">
+                        <div class="card-body cart-card-body">
+                            {% for item in cart_items %}
+                                <div class="row align-items-center cart-item">
+                                    <div class="col-md-2">
+                                        <img src="{{ item.image }}" alt="{{ item.medicine.name }}" 
+                                             class="img-fluid product-image">
+                                    </div>
+                                    <div class="col-md-4 product-details">
+                                        <h5>{{ item.medicine.name }}</h5>
+                                        <p class="product-company">{{ item.medicine.company_name }}</p>
+                                        <small class="product-power">{{ item.medicine.power }}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p class="product-price">₹{{ item.price }}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="quantity-controls">
+                                            <form method="post" action="{% url 'update_cart' item.medicine.id %}" class="quantity-form">
+                                                {% csrf_token %}
+                                                <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                                    min="1" max="{{ item.medicine.quantity }}" 
+                                                    class="form-control quantity-input" 
+                                                    onchange="this.form.submit()">
+                                            </form>
+
+                                            <form method="post" action="{% url 'remove_from_cart' item.medicine.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card summary-card">
+                        <div class="card-body">
+                            <h5 class="summary-title">Order Summary</h5>
+                            
+                            {% for item in cart_items %}
+                                <div class="summary-item">
+                                    <span>{{ item.medicine.name }} x{{ item.quantity }}</span>
+                                    <span>₹{{ item.total }}</span>
+                                </div>
+                            {% endfor %}
+                            
+                            <div class="summary-total">
+                                <span>Total:</span>
+                                <span>₹{{ total }}</span>
+                            </div>
+                            
+                            <a href="{% url 'checkout' %}" class="btn checkout-btn w-100 mt-3">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Proceed to Checkout
+                            </a>
+                            
+                            <a href="{% url 'home' %}" class="btn continue-btn w-100 mt-2">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart empty-cart-icon"></i>
+                <h3>Your cart is empty</h3>
+                <p>Start shopping to add items to your cart</p>
+                <a href="{% url 'home' %}" class="btn browse-btn">
+                    <i class="fas fa-pills me-2"></i>
+                    Browse Medicines
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<script>
+document.querySelectorAll('.quantity-input').forEach(input => {
+    let timeout = null;
+    input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            let value = this.value.trim();
+            // Check if value is a valid positive number
+            if (isNaN(value) || value === '' || Number(value) <= 0) {
+                alert('Enter valid quantity');
+                this.focus();
+            } else {
+                this.form.submit();
+            }
+        }, 1500); // wait 7ms after user stops typing before submitting
+    });
+});
+
+</script>
+
+{% endblock %}

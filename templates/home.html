@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 40px 0 30px;
+        margin-bottom: 30px;
+    }
+
+    .hero-content {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .search-section {
+        padding: 30px 0;
+        background: white;
+        margin-bottom: 20px;
+    }
+
+    .search-wrapper h2 {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .search-form {
+        width: 100%;
+    }
+
+    .search-form .input-group {
+        box-shadow: var(--shadow-md);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .search-form .input-group:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .search-input {
+        border: none !important;
+        padding: 0.875rem 1.25rem;
+        font-size: 1rem;
+        background: #fff;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .search-input:focus {
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+    }
+
+    .search-btn {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        background: var(--primary-color);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        background: #1d4ed8;
+        transform: scale(1.05);
+    }
+
+    .medicines-section {
+        padding: 20px 0 60px;
+        background: #f8fafc;
+    }
+
+    .medicines-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .medicine-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        height: fit-content;
+    }
+
+    .medicine-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .medicine-image {
+        position: relative;
+        height: 160px;
+        background: var(--light-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .medicine-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--text-muted);
+    }
+
+    .no-image i {
+        font-size: 2.5rem;
+    }
+
+    .stock-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 0.2rem 0.6rem;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .in-stock {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+    .low-stock {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .out-stock {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .medicine-content {
+        padding: 1.25rem;
+    }
+
+    .medicine-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.4rem;
+        line-height: 1.3;
+    }
+
+    .medicine-company {
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .medicine-components {
+        margin-bottom: 1rem;
+    }
+
+    .medicine-components small {
+        color: var(--text-muted);
+        background: var(--light-color);
+        padding: 0.4rem 0.6rem;
+        border-radius: 15px;
+        display: inline-block;
+        font-size: 0.8rem;
+    }
+
+    .medicine-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .medicine-price {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .medicine-price .price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        line-height: 1;
+    }
+
+    .medicine-price .per-unit {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+
+    .view-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .view-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: white;
+        border-radius: 12px;
+        margin: 2rem 0;
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .no-results h3 {
+        color: var(--dark-color);
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
+    }
+
+    .no-results p {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Search results info */
+    .search-info {
+        text-align: center;
+        margin-bottom: 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .search-term {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Compact layout adjustments */
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .medicines-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .hero-actions .btn {
+            width: 200px;
+        }
+        
+        .search-section {
+            padding: 20px 0;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .medicines-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .medicine-card {
+            margin: 0 1rem;
+        }
+    }
+
+</style>
+
+<!-- Compact Hero Section -->
+<div class="hero-section">
+    <div class="container-fluid">
+        <div class="hero-content">
+            <h1 class="hero-title">Your Health, Our Priority</h1>
+            <p class="hero-subtitle">Discover a wide range of quality medicines and healthcare products at affordable prices with fast delivery.</p>
+            <div class="hero-actions">
+                <a href="#medicines" class="btn btn-primary btn-lg">
+                    <i class="fas fa-pills me-2"></i>Shop Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div class="search-section" id="medicines">
+    <div class="container-fluid">
+        <div class="search-wrapper">
+            <h2 class="text-center">Find Your Medicines</h2>
+            <div class="search-container">
+                <form method="GET" action="{% url 'home' %}" class="search-form">
+                    <div class="input-group">
+                       <input type="text" 
+                                name="q" 
+                                class="form-control search-input" 
+                                placeholder="Search medicines..." 
+                                value="{{query}}" 
+                                autocomplete="off" 
+                                required>
+                        <button class="btn btn-primary search-btn" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medicines Grid -->
+<div class="medicines-section">
+    <div class="container-fluid">
+        {% if request.GET.search %}
+            <div class="search-info">
+                {% if medicines %}
+                    Showing {{ medicines|length }} result{{ medicines|length|pluralize }} for "<span class="search-term">{{ request.GET.search }}</span>"
+                {% else %}
+                    No results found for "<span class="search-term">{{ request.GET.search }}</span>"
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        {% if medicines %}
+            <div class="medicines-grid">
+                {% for medicine in medicines %}
+                <div class="medicine-card">
+                    <div class="medicine-image">
+                        {% if medicine.image %}
+                            <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}" loading="lazy">
+                        {% else %}
+                            <div class="no-image">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                        {% endif %}
+                        {% if medicine.quantity <= 5 and medicine.quantity > 0 %}
+                            <span class="stock-badge low-stock">Low Stock</span>
+                        {% elif medicine.quantity > 0 %}
+                            <span class="stock-badge in-stock">In Stock</span>
+                        {% else %}
+                            <span class="stock-badge out-stock">Out of Stock</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="medicine-content">
+                        <h3 class="medicine-name">{{ medicine.name }}</h3>
+                        <p class="medicine-company">{{ medicine.company_name }}</p>
+                        <div class="medicine-components">
+                            <small><i class="fas fa-flask me-1"></i>{{ medicine.components }}</small>
+                        </div>
+                        
+                        <div class="medicine-footer">
+                            <div class="medicine-price">
+                                <span class="price">₹{{ medicine.price }}</span>
+                                <small class="per-unit">per unit</small>
+                            </div>
+                            <form method="post" action="{% url 'add_to_cart' medicine.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm view-btn" title="Add to Cart">
+                                    <i class="fas fa-cart-plus"></i>
+                                </button>
+                            </form>
+
+                            <a href="/medicine/{{ medicine.id }}/" class="btn btn-primary btn-sm view-btn">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>No medicines found</h3>
+                <p>{% if request.GET.search %}Try adjusting your search terms{% else %}Try searching for medicines, brands, or components{% endif %} or check back later for new arrivals.</p>
+                <a href="/" class="btn btn-primary">View All Medicines</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Enhanced search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.querySelector('.search-form');
+    const searchInput = document.querySelector('.search-input');
+    const searchBtn = document.querySelector('.search-btn');
+    
+    // Handle form submission
+    searchForm.addEventListener('submit', function(e) {
+        const searchTerm = searchInput.value.trim();
+        if (!searchTerm) {
+            e.preventDefault();
+            searchInput.focus();
+            return false;
+        }
+    });
+    
+    // Handle Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchForm.submit();
+        }
+    });
+    
+    // Button click handler
+    searchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const searchTerm = searchInput.value.trim();
+        if (searchTerm) {
+            searchForm.submit();
+        } else {
+            searchInput.focus();
+        }
+    });
+    
+    // Auto-focus on search input when page loads
+    if (searchInput && !searchInput.value) {
+        setTimeout(() => {
+            searchInput.focus();
+        }, 500);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 1rem;      /* top & bottom spacing, slight horizontal padding */
+    margin: 0;               /* remove unwanted outside gaps */
+    border-radius: 0 0 20px 20px; /* optional curved bottom */
+}
+
+.hero-section h1 {
+    margin-bottom: 1.5rem;   /* space under heading */
+}
+
+.hero-section p {
+    margin-bottom: 2rem;     /* space under paragraph */
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 3rem 1rem;  /* smaller padding on mobile */
+        text-align: center;  /* center-align text for mobile */
+    }
+}
+
+.medicine-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.medicine-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.search-form {
+    max-width: 400px;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+}
+
+.discount-input {
+    max-width: 120px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .search-form {
+        margin-top: 1rem;
+    }
+}
