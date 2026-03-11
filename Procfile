@@ -1,1 +1,1 @@
-web: gunicorn medical_shopSAAS.wsgi
+web: gunicorn medical_shop.wsgi:application
