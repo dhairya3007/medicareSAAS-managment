@@ -28,6 +28,9 @@ urlpatterns = [
     # Regular admin URLs
     path('admin/', admin.site.urls),
     
+    path('org-admin/', include('org_admin.urls')),
+
+
     # Your app URLs
     path('', include('store.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

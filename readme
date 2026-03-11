@@ -1,6 +1,50 @@
 username ds
 passwrods Dhairya@3007
 
-C:\Users\HP\OneDrive\Desktop\medical_shop-main\.venv
-.\.venv\Scripts\Activate
+(.venv) PS C:\Users\HP\OneDrive\Desktop\medical_shop-main> python -m venv .venv
+>>
+(.venv) PS C:\Users\HP\OneDrive\Desktop\medical_shop-main> .venv\Scripts\activate
 python manage.py runserver
+
+
+git checkout -b saas-conversion
+admin
+newpassword123
+superuser:root
+superuserpassword:root123
+admin1
+Dhairya@9898794846
+Username: admin
+Password: Admin@123
+
+
+
+Start Redis Server (WSL)
+ search in window + s: wsl
+ run this command :redis-server
+
+now in vs code run this in terminal 1:
+celery -A medical_shop worker -l info -P solo 
+Note: -P solo is required when running Celery on Windows.
+
+
+start django server in other terminal 
+
+
+Terminal Setup Summary
+
+During development you should have three terminals running:
+
+Terminal 1 – Redis
+
+    wsl
+    redis-server
+    redis-cli ping
+
+Terminal 2 – Celery Worker
+
+    celery -A medical_shop worker -l info -P solo
+
+Terminal 3 – Django Server
+
+    python manage.py runserver

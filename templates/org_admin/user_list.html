@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.admin-page {
+    font-family: 'DM Sans', sans-serif;
+    padding-bottom: 4rem;
+}
+
+/* Header */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.admin-title i {
+    color: var(--primary);
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.2rem;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.btn-add:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Panel */
+.admin-panel {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.panel-head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.status-badge.active {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success-border);
+}
+
+.status-badge.inactive {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+}
+
+/* Table */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    padding: 0.85rem 1rem;
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+}
+
+.user-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.user-table tbody tr:hover {
+    background: #fafbfc;
+}
+
+.btn-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.btn-edit:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* Mobile Cards */
+.mobile-user-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem;
+    margin-bottom: 0.75rem;
+    transition: box-shadow 0.2s;
+}
+
+.mobile-user-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.user-meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 992px) {
+    .d-lg-block { display: none; }
+}
+
+@media (min-width: 993px) {
+    .d-lg-none { display: none; }
+}
+</style>
+
+<div class="admin-page">
+
+    <!-- Header -->
+    <div class="admin-header">
+        <h1 class="admin-title">
+            <i class="fas fa-users"></i> User Management
+        </h1>
+
+        <a href="{% url 'org_admin_add_user' %}" class="btn-add">
+            <i class="fas fa-plus"></i> Add User
+        </a>
+    </div>
+
+    <!-- Panel -->
+    <div class="admin-panel">
+        <div class="panel-head">
+            <h5 class="panel-title">All Organization Users</h5>
+            <span style="font-size:0.8rem;color:var(--text-muted);">
+                Total: {{ users|length }}
+            </span>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="d-lg-block table-responsive">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for profile in users %}
+                    <tr>
+                        <td>{{ profile.user.username }}</td>
+                        <td>{{ profile.user.email }}</td>
+                        <td>{{ profile.role|title }}</td>
+                        <td>
+                            {% if profile.user.is_active %}
+                                <span class="status-badge active">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="status-badge inactive">
+                                    <i class="fas fa-times-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if profile.user.last_login %}
+                                {{ profile.user.last_login|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span style="color:var(--text-muted);font-size:0.75rem;">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ profile.user.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'org_admin_edit_user' profile.id %}" class="btn-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:1.5rem;">
+                            No users found.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="d-lg-none p-3">
+            {% for profile in users %}
+            <div class="mobile-user-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>{{ profile.user.username }}</strong>
+                    {% if profile.user.is_active %}
+                        <span class="status-badge active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                    {% else %}
+                        <span class="status-badge inactive">
+                            <i class="fas fa-times-circle"></i> Inactive
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="user-meta mb-1">
+                    {{ profile.user.email }}
+                </div>
+
+                <div class="user-meta mb-2">
+                    Role: {{ profile.role|title }}
+                </div>
+
+                <a href="{% url 'org_admin_edit_user' profile.id %}" class="btn-edit">
+                    <i class="fas fa-edit"></i> Edit User
+                </a>
+            </div>
+            {% empty %}
+                <p class="p-3">No users found.</p>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

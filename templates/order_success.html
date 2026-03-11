@@ -1,38 +1,221 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="card border-success">
-                <div class="card-body py-5">
-                    <div class="text-success mb-4">
-                        <i class="fas fa-check-circle fa-5x"></i>
-                    </div>
-                    
-                    <h1 class="text-success mb-3">Order Successful!</h1>
-                    <p class="lead mb-4">Thank you for your purchase. Your order has been placed successfully.</p>
-                    
-                    <div class="card bg-light mb-4">
-                        <div class="card-body">
-                            <h5>Order Details</h5>
-                            <p><strong>Order #:</strong> {{ order.id }}</p>
-                            <p><strong>Total Amount:</strong> ₹{{ order.final_amount }}</p>
-                            <p><strong>Order Date:</strong> {{ order.order_date|date:"M d, Y H:i" }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                        <a href="{% url 'profile' %}" class="btn btn-outline-primary me-md-2">
-                            View Order History
-                        </a>
-                        <a href="{% url 'home' %}" class="btn btn-primary">
-                            Continue Shopping
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap');
+
+  .success-wrapper {
+    min-height: 80vh;
+    background: #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .success-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 40px -5px rgba(0,0,0,0.10);
+    width: 100%;
+    max-width: 560px;
+    overflow: hidden;
+  }
+
+  .success-top {
+    background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+    padding: 3rem 2.5rem 2.5rem;
+    text-align: center;
+  }
+
+  .success-icon-ring {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    animation: pop 0.4s ease-out;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .success-icon-ring i {
+    font-size: 2.2rem;
+    color: #fff;
+  }
+
+  .success-top h1 {
+    font-family: 'DM Serif Display', serif;
+    color: #fff;
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .success-top p {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .success-body {
+    padding: 2.5rem;
+  }
+
+  .order-details-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .order-details-header {
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .order-details-header span {
+    font-size: 0.775rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #475569;
+  }
+
+  .order-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .order-detail-row:last-child { border-bottom: none; }
+
+  .detail-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .detail-value {
+    font-size: 0.925rem;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .detail-value.amount {
+    color: #059669;
+    font-size: 1rem;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline-medicare {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid #1a6eb5;
+    color: #1a6eb5;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s, color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-outline-medicare:hover {
+    background: #eff6ff;
+    color: #1a6eb5;
+  }
+
+  .btn-solid-medicare {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(135deg, #0f4c81, #1a6eb5);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-solid-medicare:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+</style>
+
+<div class="success-wrapper">
+  <div class="success-card">
+    <div class="success-top">
+      <div class="success-icon-ring">
+        <i class="fas fa-check"></i>
+      </div>
+      <h1>Order Confirmed!</h1>
+      <p>Your order has been placed successfully. Thank you for your purchase.</p>
     </div>
+
+    <div class="success-body">
+      <div class="order-details-box">
+        <div class="order-details-header">
+          <i class="fas fa-receipt" style="color:#94a3b8; font-size:0.85rem;"></i>
+          <span>Order Summary</span>
+        </div>
+
+        <div class="order-detail-row">
+          <span class="detail-label">Order Number</span>
+          <span class="detail-value">#{{ order.id }}</span>
+        </div>
+
+        <div class="order-detail-row">
+          <span class="detail-label">Order Date</span>
+          <span class="detail-value">{{ order.order_date|date:"M d, Y — H:i" }}</span>
+        </div>
+
+        <div class="order-detail-row">
+          <span class="detail-label">Total Amount</span>
+          <span class="detail-value amount">₹{{ order.final_amount }}</span>
+        </div>
+      </div>
+
+      <div class="actions-row">
+
+        <a href="{% url 'invoice_preview' order.id %}" class="btn-solid-medicare">
+          <i class="fas fa-file-invoice"></i> View Invoice
+        </a>
+
+        <a href="{% url 'profile' %}" class="btn-outline-medicare">
+            <i class="fas fa-history me-2"></i>Order History
+        </a>
+
+        <a href="{% url 'home' %}" class="btn-outline-medicare">
+            <i class="fas fa-store me-2"></i>Continue Shopping
+        </a>
+
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from store.views import add_product
 from django.contrib.admin.views.decorators import staff_member_required
+from store import views
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -22,8 +23,12 @@ urlpatterns = [
     path('checkout/', views.checkout_view, name='checkout'),
     path('order/success/<int:order_id>/', views.order_success, name='order_success'),
     # Protect the add_product view so only staff users access it
-    path('admin/add-product/', staff_member_required(add_product), name='add_product'),
+    path('admin/add-product/', add_product, name='add_product'),
+
     path('api/medicine/', views.api_add_medicine, name='api_add_medicine'),
     path('api/medicine/<int:medicine_id>/', views.api_update_medicine, name='api_update_medicine'),
     path('api/medicine/<int:medicine_id>/delete/', views.api_delete_medicine, name='api_delete_medicine'),
+    path("switch-org/<int:org_id>/", views.switch_organization, name="switch_org"),
+    path('invoice/<int:order_id>/', views.generate_invoice, name='generate_invoice'),
+    path("invoice/<int:order_id>/preview/", views.invoice_preview, name="invoice_preview"),
 ]

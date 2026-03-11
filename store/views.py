@@ -9,23 +9,34 @@ from django.db.models import Q
 from .models import Medicine, Order, OrderItem
 from decimal import Decimal
 import json
+from .decorators import org_staff_required
+from .utils import get_user_organization
 
 def home(request):
-    medicines = Medicine.objects.all().order_by('-created_at')[:12]
-    
+    medicines = Medicine.objects.none()
     query = request.GET.get('q', '')
-    if query:
-        medicines = Medicine.objects.filter(
-            Q(name__icontains=query) | 
-            Q(company_name__icontains=query) |
-            Q(components__icontains=query)
-        )
-    
-    return render(request, 'home.html', {'medicines': medicines, 'query': query})
 
-def medicine_detail(request, medicine_id):
-    medicine = get_object_or_404(Medicine, id=medicine_id)
-    return render(request, 'product_detail.html', {'medicine': medicine})
+    if request.user.is_authenticated:
+        org = get_user_organization(request)  # ✅ moved inside
+
+        medicines = Medicine.objects.filter(
+            organization=org
+        ).order_by('-created_at')[:12]
+
+        if query:
+            medicines = Medicine.objects.filter(
+                organization=org
+            ).filter(
+                Q(name__icontains=query) |
+                Q(company_name__icontains=query) |
+                Q(components__icontains=query)
+            )
+
+    return render(request, 'home.html', {
+        'medicines': medicines,
+        'query': query
+    })
+
 
 def register_view(request):
     if request.method == 'POST':
@@ -86,7 +97,14 @@ def save_cart(request, cart):
 @login_required
 def add_to_cart(request, medicine_id):
     if request.method == 'POST':
-        medicine = get_object_or_404(Medicine, id=medicine_id)
+        org = get_user_organization(request)
+
+        medicine = get_object_or_404(
+            Medicine,
+            id=medicine_id,
+            organization=org
+        )
+
         cart = get_cart(request)
         
         medicine_id_str = str(medicine_id)
@@ -115,9 +133,15 @@ def cart_view(request):
     
     for medicine_id, item in cart.items():
         item_total = Decimal(item['price']) * item['quantity']
+        org = get_user_organization(request)
         cart_items.append({
             'id': medicine_id,
-            'medicine': get_object_or_404(Medicine, id=medicine_id),
+            'medicine': get_object_or_404(
+                    Medicine,
+                    id=medicine_id,
+                    organization=org
+                ),
+
             'quantity': item['quantity'],
             'price': item['price'],
             'total': item_total,
@@ -143,7 +167,14 @@ def update_cart(request, medicine_id):
                 return redirect('cart_view')
             
             quantity = int(quantity_str)
-            medicine = get_object_or_404(Medicine, id=medicine_id)
+            org = get_user_organization(request)
+
+            medicine = get_object_or_404(
+                Medicine,
+                id=medicine_id,
+                organization=org
+            )
+
             
             if quantity <= 0:
                 del cart[medicine_id_str]
@@ -181,6 +212,7 @@ from django.utils import timezone
 
 @login_required
 def checkout_view(request):
+    org = get_user_organization(request)
     cart = get_cart(request)
     if not cart:
         messages.warning(request, 'Your cart is empty!')
@@ -190,7 +222,12 @@ def checkout_view(request):
     total = Decimal('0.00')
     
     for medicine_id, item in cart.items():
-        medicine = get_object_or_404(Medicine, id=medicine_id)
+        medicine = get_object_or_404(
+        Medicine,
+        id=medicine_id,
+        organization=org
+    )
+
         if item['quantity'] > medicine.quantity:
             messages.error(request, f'Not enough stock for {medicine.name}. Only {medicine.quantity} available.')
             return redirect('cart_view')
@@ -210,7 +247,9 @@ def checkout_view(request):
     if request.method == 'POST':
         # Only allow discount if user is staff/admin
         if request.user.is_staff:
-            discount_percentage = Decimal(request.POST.get('discount', '0'))
+            discount_input = request.POST.get('discount') or '0'
+            discount_percentage = Decimal(discount_input)
+
             discount_amount = total * (discount_percentage / Decimal('100'))
             final_amount = total - discount_amount
 
@@ -218,21 +257,25 @@ def checkout_view(request):
             with transaction.atomic():
                 # Create order
                 order = Order.objects.create(
-                    user=request.user,
-                    total_amount=total,
-                    discount_percentage=discount_percentage,
-                    final_amount=final_amount,
-                    is_completed=True
-                )
+                    organization=org, # 👈 ADD THIS
+                user=request.user,
+                total_amount=total,
+                discount_percentage=discount_percentage,
+                final_amount=final_amount,
+                is_completed=True
+            )
+
                 
                 # Create order items and update medicine quantities
                 for item in cart_items:
                     OrderItem.objects.create(
+                        organization=org,
                         order=order,
                         medicine=item['medicine'],
                         quantity=item['quantity'],
                         price=item['price']
                     )
+
                     item['medicine'].quantity -= item['quantity']
                     item['medicine'].save()
                 
@@ -243,9 +286,11 @@ def checkout_view(request):
                 messages.success(request, f'Order placed successfully! Total: ₹{final_amount:.2f}')
                 return redirect('order_success', order_id=order.id)
                 
+       # except Exception as e:
+            #messages.error(request, 'An error occurred during checkout. Please try again.')
         except Exception as e:
-            messages.error(request, 'An error occurred during checkout. Please try again.')
-    
+            print(e)
+            raise e
     return render(request, 'checkout.html', {
         'cart_items': cart_items,
         'total': total,
@@ -255,32 +300,58 @@ def checkout_view(request):
     })
 @login_required
 def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    org = get_user_organization(request)
+
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        user=request.user,
+        organization=org
+    )
+
     return render(request, 'order_success.html', {'order': order})
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .forms import MedicineForm
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import MedicineForm
+from .decorators import org_staff_required
 
-@staff_member_required
+@org_staff_required
 def add_product(request):
+    org = get_user_organization(request)   # ✅ get organization first
+
     if request.method == 'POST':
-        form = MedicineForm(request.POST, request.FILES)
+        form = MedicineForm(
+            request.POST,
+            request.FILES,
+            organization=org
+        )
+
         if form.is_valid():
-            medicine = form.save()
-            messages.success(request, f'Medicine "{medicine.name}" added successfully!')
+            medicine = form.save(commit=False)
+            medicine.organization = org   # ✅ use org instead of userprofile
+            medicine.save()
+
+            messages.success(request, "Medicine added successfully!")
             return redirect('add_product')
+
     else:
-        form = MedicineForm()
-    
+        form = MedicineForm(
+            organization=org
+        )
+
     return render(request, 'add_product.html', {'form': form})
+
 from django.shortcuts import redirect
 from django.contrib.admin.views.decorators import staff_member_required
 
-@staff_member_required
+@org_staff_required
 def redirect_to_medicine_admin(request):
     return redirect('admin:store_medicine_changelist')
-from django.contrib.admin.views.decorators import staff_member_required
+
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -296,37 +367,43 @@ from django.utils import timezone
 from .models import Medicine, Category, Supplier
 from .forms import MedicineForm
 
-@staff_member_required
+@org_staff_required
 def admin_product_management(request):
-    """Comprehensive product management page with filtering"""
+    """Comprehensive product management page with tenant filtering"""
     try:
-        # Get filter parameter from request
+        org = get_user_organization(request)  # 🔐 Tenant isolation
+
         filter_type = request.GET.get('filter', 'all')
-        
-        # Base queryset
-        medicines = Medicine.objects.all().order_by('-created_at')
-        
-        # Apply filters
+
+        # Base queryset (ALWAYS tenant filtered)
+        medicines = Medicine.objects.filter(
+            organization=org
+        ).order_by('-created_at')
+
+        # Apply filters ON TOP of tenant filter
         if filter_type == 'expired':
-            medicines = Medicine.objects.filter(
+            medicines = medicines.filter(
                 expiry_date__lt=timezone.now().date()
-            ).order_by('expiry_date')  # Nearest expiry first
+            ).order_by('expiry_date')
+
         elif filter_type == 'low_stock':
-            medicines = Medicine.objects.filter(
+            medicines = medicines.filter(
                 quantity__lte=10
-            ).order_by('quantity')  # Lowest stock first
+            ).order_by('quantity')
+
         elif filter_type == 'out_of_stock':
-            medicines = Medicine.objects.filter(quantity=0).order_by('name')
-        else:
-            # Default: show all, newest first
-            medicines = Medicine.objects.all().order_by('-created_at')
-        
-        # Get categories and suppliers
-        categories = Category.objects.all()
-        suppliers = Supplier.objects.all()
-        
-        form = MedicineForm()
-        
+            medicines = medicines.filter(
+                quantity=0
+            ).order_by('name')
+
+        # Categories & suppliers (optional: also filter by org if needed)
+        categories = Category.objects.filter(organization=org)
+        suppliers = Supplier.objects.filter(organization=org)
+
+        form = MedicineForm(
+    organization=org
+)
+
         context = {
             'medicines': medicines,
             'categories': categories,
@@ -334,14 +411,21 @@ def admin_product_management(request):
             'form': form,
             'title': 'Product Management',
             'current_filter': filter_type,
-            'expired_count': Medicine.objects.filter(expiry_date__lt=timezone.now().date()).count(),
-            'low_stock_count': Medicine.objects.filter(quantity__lte=10, quantity__gt=0).count(),
-            'out_of_stock_count': Medicine.objects.filter(quantity=0).count(),
-            'total_count': Medicine.objects.count(),
+            'expired_count': medicines.filter(
+                expiry_date__lt=timezone.now().date()
+            ).count(),
+            'low_stock_count': medicines.filter(
+                quantity__lte=10,
+                quantity__gt=0
+            ).count(),
+            'out_of_stock_count': medicines.filter(
+                quantity=0
+            ).count(),
+            'total_count': medicines.count(),
         }
-        
+
         return render(request, 'admin_product_management.html', context)
-        
+
     except Exception as e:
         print(f"Admin product management error: {e}")
         return render(request, 'admin_product_management.html', {
@@ -350,67 +434,134 @@ def admin_product_management(request):
             'form': MedicineForm(),
             'error_message': 'Error loading product management page'
         })
-@staff_member_required
+from decimal import Decimal ,InvalidOperation
+
+from datetime import datetime
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+
+@org_staff_required
 @csrf_exempt
 @require_http_methods(["POST"])
+@org_staff_required
+@require_http_methods(["POST"])
+
 def api_update_medicine(request, medicine_id):
-    """API endpoint to update medicine details"""
-    medicine = get_object_or_404(Medicine, id=medicine_id)
-    
+
+    if request.method != "POST":
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request method'
+        }, status=405)
+
+    org = get_user_organization(request)
+
+    medicine = get_object_or_404(
+        Medicine,
+        id=medicine_id,
+        organization=org
+    )
+
     try:
         data = json.loads(request.body)
-        
-        # Update fields if they exist in the request
-        if 'quantity' in data:
-            medicine.quantity = int(data['quantity'])
-        if 'price' in data:
-            medicine.price = float(data['price'])
-        if 'name' in data:
-            medicine.name = data['name']
-        if 'company_name' in data:
-            medicine.company_name = data['company_name']
-        if 'power' in data:
-            medicine.power = data['power']
-        
-         # ✅ CATEGORY update
-        if 'category_id' in data:
-            from .models import Category
-            medicine.category = Category.objects.get(id=data['category_id'])
 
-        # ✅ EXPIRY DATE update
-        if 'expiry_date' in data:
-            medicine.expiry_date = data['expiry_date']   # expects YYYY-MM-DD
+        # -------- BASIC FIELDS --------
+
+        if 'name' in data and data['name'] != "":
+            medicine.name = data['name'].strip()
+
+        if 'company_name' in data and data['company_name'] != "":
+            medicine.company_name = data['company_name'].strip()
+
+        if 'power' in data and data['power'] != "":
+            medicine.power = data['power'].strip()
+
+        # -------- NUMERIC FIELDS --------
+
+        if 'quantity' in data and data['quantity'] != "":
+            medicine.quantity = int(data['quantity'])
+
+        if 'price' in data and data['price'] != "":
+            try:
+                medicine.price = Decimal(str(data['price']))
+            except InvalidOperation:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid price format'
+                }, status=400)
+
+        # -------- DATE FIELD --------
+
+        if 'expiry_date' in data and data['expiry_date']:
+            try:
+                medicine.expiry_date = datetime.strptime(
+                    data['expiry_date'],
+                    "%Y-%m-%d"
+                ).date()
+            except ValueError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid expiry date format (YYYY-MM-DD required)'
+                }, status=400)
+
+        # -------- SAFE CATEGORY UPDATE --------
+
+        if 'category_id' in data and data['category_id']:
+            category = get_object_or_404(
+                Category,
+                id=data['category_id'],
+                organization=org
+            )
+            medicine.category = category
+
+        # -------- SAFE SUPPLIER UPDATE --------
+
+        if 'supplier_id' in data and data['supplier_id']:
+            supplier = get_object_or_404(
+                Supplier,
+                id=data['supplier_id'],
+                organization=org
+            )
+            medicine.supplier = supplier
+
+        # -------- SAVE --------
 
         medicine.save()
 
-        
         return JsonResponse({
             'status': 'success',
-            'message': 'Medicine updated successfully',
-            'medicine': {
-                'id': medicine.id,
-                'name': medicine.name,
-                'company_name': medicine.company_name,
-                'power': medicine.power,
-                'price': str(medicine.price),
-                'quantity': medicine.quantity
-            }
+            'message': 'Medicine updated successfully'
         })
-    except Exception as e:
+
+    except json.JSONDecodeError:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': 'Invalid JSON data'
         }, status=400)
 
-@staff_member_required
+    except Exception as e:
+        print("UPDATE ERROR:", e)  # 👈 shows real issue in terminal
+        return JsonResponse({
+            'status': 'error',
+            'message': 'An unexpected error occurred'
+        }, status=400)
+
+@org_staff_required
 @csrf_exempt
 @require_http_methods(["POST"])
+
 def api_add_medicine(request):
-    """API endpoint to add a new medicine"""
     form = MedicineForm(request.POST, request.FILES)
-    
+
     if form.is_valid():
-        medicine = form.save()
+        medicine = form.save(commit=False)
+
+        # 🔐 AUTO ASSIGN TENANT
+        medicine.organization = get_user_organization(request)
+
+        medicine.save()
+
         return JsonResponse({
             'status': 'success',
             'message': 'Medicine added successfully',
@@ -424,19 +575,27 @@ def api_add_medicine(request):
                 'image_url': medicine.image.url if medicine.image else ''
             }
         })
-    else:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Form validation failed',
-            'errors': form.errors
-        }, status=400)
 
-@staff_member_required
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Form validation failed',
+        'errors': form.errors
+    }, status=400)
+
+
+@org_staff_required
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def api_delete_medicine(request, medicine_id):
     """API endpoint to delete a medicine"""
-    medicine = get_object_or_404(Medicine, id=medicine_id)
+    org = get_user_organization(request)
+
+    medicine = get_object_or_404(
+        Medicine,
+        id=medicine_id,
+        organization=org
+    )
+
     medicine_name = medicine.name
     medicine.delete()
     
@@ -449,7 +608,14 @@ from .models import Medicine
 import requests
 
 def medicine_detail(request, medicine_id):
-    medicine = get_object_or_404(Medicine, id=medicine_id)
+    org = get_user_organization(request)
+
+    medicine = get_object_or_404(
+        Medicine,
+        id=medicine_id,
+        organization=org
+    )
+
     
     medicine_info = {
         "description": "No information available from FDA database",
@@ -536,27 +702,55 @@ from .models import Medicine, Order, Category
 
 @login_required
 def dashboard_view(request):
-    # Current time for last updated
     current_time = timezone.now()
-    
-    # REAL DATA FROM YOUR MODELS
-    total_medicines = Medicine.objects.count()
-    low_stock_medicines = Medicine.objects.filter(quantity__lte=10)
+    org = get_user_organization(request)
+
+    Medicine.objects.filter(organization=org)
+    Order.objects.filter(organization=org)
+
+
+    total_medicines = Medicine.objects.filter(
+        organization=org
+    ).count()
+
+    low_stock_medicines = Medicine.objects.filter(
+        organization=org,
+        quantity__lte=10
+    )
+
     low_stock_count = low_stock_medicines.count()
-    expired_medicines = Medicine.objects.filter(expiry_date__lt=current_time.date())
+
+    expired_medicines = Medicine.objects.filter(
+        organization=org,
+        expiry_date__lt=current_time.date()
+    )
+
     expired_count = expired_medicines.count()
-    out_of_stock_count = Medicine.objects.filter(quantity=0).count()
-    
-    # Revenue calculation from your Order model
-    total_revenue = Order.objects.filter(is_completed=True).aggregate(
+
+    out_of_stock_count = Medicine.objects.filter(
+        organization=org,
+        quantity=0
+    ).count()
+
+    # ✅ CLEAN ORDER FILTERING
+    total_revenue = Order.objects.filter(
+        organization=org,
+        is_completed=True
+    ).aggregate(
         total=Sum('final_amount')
     )['total'] or 0
-    
-    total_orders = Order.objects.filter(is_completed=True).count()
-    recent_orders = Order.objects.filter(is_completed=True).select_related('user').order_by('-order_date')[:5]
+
+    total_orders = Order.objects.filter(
+        organization=org,
+        is_completed=True
+    ).count()
+
+    recent_orders = Order.objects.filter(
+        organization=org,
+        is_completed=True
+    ).select_related('user').order_by('-order_date')[:5]
     
     context = {
-        # Basic stats
         'current_time': current_time,
         'total_medicines': total_medicines,
         'low_stock_count': low_stock_count,
@@ -568,85 +762,133 @@ def dashboard_view(request):
         'total_orders': total_orders,
         'recent_orders': recent_orders,
     }
-    
+
     return render(request, 'dashboard.html', context)
+
 
 # API endpoints for dynamic data
 @login_required
+@login_required
 def stock_distribution_data(request):
-    """API endpoint for stock distribution data"""
     try:
-        total_medicines = Medicine.objects.count()
-        low_stock_count = Medicine.objects.filter(quantity__lte=10).count()
-        expired_count = Medicine.objects.filter(expiry_date__lt=timezone.now().date()).count()
-        out_of_stock_count = Medicine.objects.filter(quantity=0).count()
-        in_stock_count = total_medicines - (low_stock_count + out_of_stock_count + expired_count)
-        
+        org = get_user_organization(request)
+
+        medicines = Medicine.objects.filter(organization=org)
+
+        total_medicines = medicines.count()
+        low_stock_count = medicines.filter(quantity__lte=10).count()
+        expired_count = medicines.filter(
+            expiry_date__lt=timezone.now().date()
+        ).count()
+        out_of_stock_count = medicines.filter(quantity=0).count()
+
+        in_stock_count = total_medicines - (
+            low_stock_count + out_of_stock_count + expired_count
+        )
+
         return JsonResponse({
             'labels': ['In Stock', 'Low Stock', 'Out of Stock', 'Expired'],
             'data': [in_stock_count, low_stock_count, out_of_stock_count, expired_count],
             'colors': ['#2ecc71', '#f39c12', '#e74c3c', '#2c3e50']
         })
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@login_required
 @login_required
 def category_distribution_data(request):
-    """API endpoint for category distribution data"""
     try:
-        categories = Category.objects.annotate(medicine_count=Count('medicine'))
-        
+        org = get_user_organization(request)
+
+        categories = Category.objects.annotate(
+            medicine_count=Count(
+                'medicine',
+                filter=Q(medicine__organization=org)
+            )
+        )
+
         labels = [cat.name for cat in categories]
         data = [cat.medicine_count for cat in categories]
-        
-        # Generate colors dynamically based on number of categories
+
         colors = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c']
         if len(labels) > len(colors):
             colors = colors * (len(labels) // len(colors) + 1)
-        
+
         return JsonResponse({
             'labels': labels,
             'data': data,
             'colors': colors[:len(labels)]
         })
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@login_required
 @login_required
 def top_medicines_data(request):
-    """API endpoint for top medicines data"""
     try:
-        # Get top 5 medicines by quantity (you can change this to sales later)
-        top_medicines = Medicine.objects.order_by('-quantity')[:5]
-        
+        org = get_user_organization(request)
+
+        top_medicines = Medicine.objects.filter(
+            organization=org
+        ).order_by('-quantity')[:5]
+
         labels = [med.name for med in top_medicines]
         data = [med.quantity for med in top_medicines]
-        
+
         colors = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
-        
+
         return JsonResponse({
             'labels': labels,
             'data': data,
             'colors': colors[:len(labels)]
         })
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @login_required
 def dashboard_stats_data(request):
     """API endpoint for all dashboard stats"""
     try:
         current_time = timezone.now()
-        
-        total_medicines = Medicine.objects.count()
-        low_stock_count = Medicine.objects.filter(quantity__lte=10).count()
-        expired_count = Medicine.objects.filter(expiry_date__lt=current_time.date()).count()
-        out_of_stock_count = Medicine.objects.filter(quantity=0).count()
-        total_revenue = Order.objects.filter(is_completed=True).aggregate(
+        org = get_user_organization(request)  # 🔐 Tenant
+
+        total_medicines = Medicine.objects.filter(
+            organization=org
+        ).count()
+
+        low_stock_count = Medicine.objects.filter(
+            organization=org,
+            quantity__lte=10
+        ).count()
+
+        expired_count = Medicine.objects.filter(
+            organization=org,
+            expiry_date__lt=current_time.date()
+        ).count()
+
+        out_of_stock_count = Medicine.objects.filter(
+            organization=org,
+            quantity=0
+        ).count()
+
+        total_revenue = Order.objects.filter(
+            organization=org,
+            is_completed=True
+        ).aggregate(
             total=Sum('final_amount')
         )['total'] or 0
-        total_orders = Order.objects.filter(is_completed=True).count()
-        
+
+        total_orders = Order.objects.filter(
+            organization=org,
+            is_completed=True
+        ).count()
+
         return JsonResponse({
             'total_medicines': total_medicines,
             'low_stock_count': low_stock_count,
@@ -656,55 +898,134 @@ def dashboard_stats_data(request):
             'total_orders': total_orders,
             'last_updated': current_time.strftime('%b %d, %Y %H:%M:%S')
         })
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 from .pdf_utils import generate_simple_invoice
 from django.http import JsonResponse, HttpResponse
+@login_required
 def generate_invoice_pdf(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    
+    org = get_user_organization(request)
+
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        user=request.user,
+        organization=org
+    )
+
     try:
-        # Generate PDF
         pdf_content = generate_simple_invoice(order)
-        
-        # Create HTTP response with PDF
+
         response = HttpResponse(pdf_content, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
         return response
-        
+
     except Exception as e:
         messages.error(request, f"Error generating PDF: {str(e)}")
         return redirect('order_success', order_id=order_id)
+
+@login_required
 @login_required
 def sales_report(request):
-    # Get date range from request or default to last 30 days
+    org = get_user_organization(request)  # 🔐 Tenant
+
     end_date = timezone.now()
     start_date = end_date - timezone.timedelta(days=30)
-    
-    # Sales data
+
+    # 📊 Sales Data
     daily_sales = Order.objects.filter(
+        organization=org,
         is_completed=True,
         order_date__range=[start_date, end_date]
     ).extra({'date': "date(order_date)"}).values('date').annotate(
         total_sales=Sum('final_amount'),
         order_count=Count('id')
     ).order_by('date')
-    
-    # Top selling medicines
+
+    # 💊 Top Selling Medicines
     top_medicines = OrderItem.objects.filter(
+        order__organization=org,
         order__is_completed=True,
         order__order_date__range=[start_date, end_date]
     ).values('medicine__name').annotate(
         total_sold=Sum('quantity'),
         total_revenue=Sum('price')
     ).order_by('-total_sold')[:10]
-    
+
     context = {
         'daily_sales': daily_sales,
         'top_medicines': top_medicines,
         'start_date': start_date,
         'end_date': end_date,
     }
-    
+
     return render(request, 'sales_report.html', context)
 
+from organizations.models import Organization
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import redirect
+
+@user_passes_test(lambda u: u.is_superuser)
+def switch_organization(request, org_id):
+    org = Organization.objects.filter(id=org_id).first()
+    if org:
+        request.session["selected_org_id"] = org.id
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
+from weasyprint import HTML
+from .models import Order
+
+
+def generate_invoice(request, order_id):
+    org = get_user_organization(request)
+
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        user=request.user,
+        organization=org
+    )
+
+    items = order.items.all()
+
+    for item in items:
+        item.line_total = item.quantity * item.price
+
+    html_string = render_to_string("invoice.html", {
+        "order": order,
+        "items": items,
+        "pdf": True
+    })
+
+    pdf = HTML(string=html_string).write_pdf()
+
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="invoice_{order.id}.pdf"'
+
+    return response
+
+
+def invoice_preview(request, order_id):
+    org = get_user_organization(request)
+
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        user=request.user,
+        organization=org
+    )
+
+    items = order.items.all()
+
+    for item in items:
+        item.line_total = item.quantity * item.price
+
+    return render(request, "invoice.html", {
+        "order": order,
+        "items": items,
+        "pdf": False
+    })

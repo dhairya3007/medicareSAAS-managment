@@ -2,217 +2,363 @@
 
 {% block content %}
 <style>
-    .profile-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 1rem;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap');
 
-    .profile-header {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        padding: 2rem 1rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
+  .profile-page {
+    background: #f0f4f8;
+    min-height: 100vh;
+    padding: 2rem 0 4rem;
+    font-family: 'DM Sans', sans-serif;
+  }
 
-    .profile-info,
-    .orders-section {
-        background: white;
-        padding: 2rem 1rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 2rem;
-    }
+  .profile-container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
 
-    .profile-info h3,
-    .orders-section h3 {
-        color: var(--dark-color);
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--border-color);
-        font-size: 1.25rem;
-    }
+  /* Hero Banner */
+  .profile-hero {
+    background: linear-gradient(135deg, #0f4c81 0%, #1a6eb5 100%);
+    border-radius: 16px;
+    padding: 2.5rem 2.5rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    flex-wrap: wrap;
+  }
 
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border-color);
-        flex-wrap: wrap;
-    }
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
-    .info-row:last-child {
-        border-bottom: none;
-    }
+  .profile-avatar i { font-size: 2rem; color: #fff; }
 
-    .info-label {
-        font-weight: 600;
-        color: var(--dark-color);
-        min-width: 120px;
-    }
+  .profile-hero-text h2 {
+    font-family: 'DM Serif Display', serif;
+    color: #fff;
+    font-size: 1.7rem;
+    margin: 0 0 0.25rem;
+  }
 
-    .info-value {
-        color: var(--text-muted);
-        flex: 1;
-        word-break: break-word;
-    }
+  .profile-hero-text p {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.875rem;
+    margin: 0;
+  }
 
-    .orders-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        overflow-x: auto;
-        display: block;
-    }
+  /* Cards */
+  .profile-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 24px rgba(0,0,0,0.07);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
 
-    .orders-table th,
-    .orders-table td {
-        padding: 0.75rem 0.5rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
-        white-space: nowrap;
-    }
+  .card-head {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
 
-    .orders-table th {
-        background: var(--light-color);
-        font-weight: 600;
-        color: var(--dark-color);
-    }
+  .card-head h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
 
-    .orders-table tr:hover {
-        background: var(--light-color);
-    }
+  .card-head i { color: #1a6eb5; font-size: 0.95rem; }
 
-    .no-orders {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: var(--text-muted);
-    }
+  .card-body-custom { padding: 1.75rem; }
 
-    .no-orders h4 {
-        margin-bottom: 1rem;
-        font-size: 1.25rem;
-    }
+  /* Info Rows */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
 
-    .btn {
-        padding: 0.5rem 1.25rem;
-        font-size: 0.9rem;
-    }
+  .info-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    min-width: 110px;
+  }
 
-    @media (max-width: 768px) {
-        .info-row {
-            flex-direction: column;
-            gap: 0.25rem;
-        }
+  .info-value {
+    font-size: 0.925rem;
+    color: #1e293b;
+    font-weight: 500;
+    flex: 1;
+    text-align: right;
+  }
 
-        .profile-header h2 {
-            font-size: 1.5rem;
-        }
+  .form-input-inline {
+    width: 100%;
+    max-width: 280px;
+    padding: 0.55rem 0.9rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    color: #0f172a;
+    background: #f8fafc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
 
-        .orders-table th,
-        .orders-table td {
-            padding: 0.5rem;
-        }
+  .form-input-inline:focus {
+    border-color: #1a6eb5;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,110,181,0.12);
+  }
 
-        .orders-section h3,
-        .profile-info h3 {
-            font-size: 1.1rem;
-        }
-    }
+  .save-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid #f1f5f9;
+  }
 
-    @media (max-width: 480px) {
-        .profile-container {
-            padding: 0.5rem;
-        }
+  .btn-save {
+    padding: 0.65rem 1.5rem;
+    background: linear-gradient(135deg, #0f4c81, #1a6eb5);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
 
-        .profile-header {
-            padding: 1.5rem 0.5rem;
-        }
+  .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        .orders-table {
-            font-size: 0.8rem;
-        }
+  /* Table */
+  .orders-table-wrap { overflow-x: auto; }
 
-        .btn {
-            width: 100%;
-            text-align: center;
-        }
-    }
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .orders-table thead tr {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .orders-table th {
+    padding: 0.85rem 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .orders-table td {
+    padding: 1rem 1.25rem;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+
+  .orders-table tbody tr:last-child td { border-bottom: none; }
+
+  .orders-table tbody tr:hover { background: #fafbfc; }
+
+  .order-id { font-weight: 700; color: #1a6eb5; }
+
+  .order-items { color: #475569; font-size: 0.85rem; line-height: 1.6; }
+
+  .order-amount { font-weight: 700; color: #0f172a; }
+
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-completed { background: #f0fdf4; color: #15803d; }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .empty-icon {
+    width: 72px;
+    height: 72px;
+    background: #eff6ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+  }
+
+  .empty-icon i { font-size: 1.75rem; color: #1a6eb5; }
+
+  .empty-state h4 {
+    font-family: 'DM Serif Display', serif;
+    color: #0f172a;
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .empty-state p { color: #64748b; font-size: 0.9rem; margin: 0 0 1.5rem; }
+
+  .btn-shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #0f4c81, #1a6eb5);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-shop:hover { opacity: 0.9; color: #fff; }
+
+  @media (max-width: 576px) {
+    .info-value { text-align: left; }
+    .form-input-inline { max-width: 100%; }
+    .profile-hero { padding: 1.5rem; }
+  }
 </style>
 
-<div class="profile-container">
-    <div class="profile-header">
-        <h2><i class="fas fa-user-circle me-2"></i>User Profile</h2>
+<div class="profile-page">
+  <div class="profile-container">
+
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="profile-avatar">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="profile-hero-text">
+        <h2>{{ user.username }}</h2>
+        <p>Member since {{ user.date_joined|date:"M Y" }} &nbsp;·&nbsp; MediCare Patient Portal</p>
+      </div>
     </div>
 
-    <div class="profile-info">
-    <h3>Personal Information</h3>
-    <form method="post" action="{% url 'profile' %}">
-        {% csrf_token %}
-        <div class="info-row">
-            <span class="info-label">Username:</span>
+    <!-- Personal Information -->
+    <div class="profile-card">
+      <div class="card-head">
+        <i class="fas fa-id-card"></i>
+        <h3>Personal Information</h3>
+      </div>
+      <div class="card-body-custom">
+        <form method="post" action="{% url 'profile' %}">
+          {% csrf_token %}
+
+          <div class="info-row">
+            <span class="info-label">Username</span>
             <span class="info-value">{{ user.username }}</span>
-        </div>
+          </div>
 
-        <div class="info-row">
-            <label for="email" class="info-label">Email:</label>
-            <input type="email" id="email" name="email" class="form-control info-value"
-                   value="{{ user.email }}" required>
-        </div>
-        
-        <div class="mt-3 text-end">
-            <button type="submit" class="btn btn-primary">Save Email</button>
-        </div>
-    </form>
-    
-    <div class="info-row mt-3">
-        <span class="info-label">Joined:</span>
-        <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+          <div class="info-row">
+            <span class="info-label">Email Address</span>
+            <input type="email" id="email" name="email" class="form-input-inline"
+                   value="{{ user.email }}" required placeholder="your@email.com">
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Member Since</span>
+            <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+          </div>
+
+          <div class="save-row">
+            <button type="submit" class="btn-save">
+              <i class="fas fa-save me-2"></i>Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
 
+    <!-- Order History -->
+    <div class="profile-card">
+      <div class="card-head">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>Order History</h3>
+      </div>
 
-    <div class="orders-section">
-        <h3><i class="fas fa-shopping-bag me-2"></i>Order History</h3>
-
-        {% if orders %}
-            <div style="overflow-x:auto;">
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Date</th>
-                            <th>Items</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                        <tr>
-                            <td>#{{ order.id }}</td>
-                            <td>{{ order.order_date|date:"M d, Y" }}</td>
-                            <td>
-                                {% for item in order.items.all %}
-                                    {{ item.medicine.name }} (x{{ item.quantity }}){% if not forloop.last %}<br>{% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>₹{{ order.final_amount }}</td>
-                            <td><span class="badge bg-success">Completed</span></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="no-orders">
-                <h4>No orders yet</h4>
-                <p>Start your health journey today</p>
-                <a href="/" class="btn btn-primary">Start Shopping</a>
-            </div>
-        {% endif %}
+      {% if orders %}
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td class="order-id">#{{ order.id }}</td>
+              <td>{{ order.order_date|date:"M d, Y" }}</td>
+              <td>
+                <div class="order-items">
+                  {% for item in order.items.all %}
+                    {{ item.medicine.name }} &times; {{ item.quantity }}{% if not forloop.last %}<br>{% endif %}
+                  {% endfor %}
+                </div>
+              </td>
+              <td class="order-amount">₹{{ order.final_amount }}</td>
+              <td>
+                <span class="badge-status badge-completed">
+                  <i class="fas fa-check-circle"></i>Completed
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-shopping-cart"></i></div>
+        <h4>No orders yet</h4>
+        <p>You haven't placed any orders. Start your health journey today.</p>
+        <a href="/" class="btn-shop"><i class="fas fa-store"></i>Browse Medicines</a>
+      </div>
+      {% endif %}
     </div>
+
+  </div>
 </div>
 {% endblock %}

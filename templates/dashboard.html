@@ -3,680 +3,614 @@
 
 {% block content %}
 <style>
-    .stats-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        border-left: 4px solid;
-        transition: transform 0.3s ease;
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .stats-card.primary { border-left-color: #3498db; }
-    .stats-card.success { border-left-color: #2ecc71; }
-    .stats-card.warning { border-left-color: #f39c12; }
-    .stats-card.danger { border-left-color: #e74c3c; }
-    
-    .stats-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    
-    .stats-label {
-        font-size: 1rem;
-        color: #7f8c8d;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .alert-card {
-        border-left: 4px solid #e74c3c;
-        background: #fdf2f2;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-    }
-    
-    .warning-card {
-        border-left: 4px solid #f39c12;
-        background: #fef9e7;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-    }
-    
-    .chart-container {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        height: 100%;
-    }
-    
-    .chart-header {
-        display: flex;
-        justify-content: space-between; /* Fixed: changed 'between' to 'space-between' */
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .chart-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin: 0;
-    }
-    
-    .refresh-btn {
-        background: none;
-        border: none;
-        color: #3498db;
-        cursor: pointer;
-        font-size: 1.1rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .refresh-btn:hover {
-        transform: rotate(180deg);
-    }
+  .dashboard-page { font-family: 'DM Sans', sans-serif; padding-bottom: 4rem; }
+
+  /* ── Page Header ── */
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .dash-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .last-updated {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.85rem;
+  }
+
+  /* ── Stat Cards ── */
+  .stats-row { margin-bottom: 1.75rem; }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 2px 0 0 2px;
+  }
+
+  .stat-card.blue::before  { background: var(--primary); }
+  .stat-card.green::before { background: var(--success); }
+  .stat-card.amber::before { background: var(--warning); }
+  .stat-card.red::before   { background: var(--danger); }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .stat-card.blue  .stat-icon { background: var(--primary-light); color: var(--primary); }
+  .stat-card.green .stat-icon { background: var(--success-light); color: var(--success); }
+  .stat-card.amber .stat-icon { background: var(--warning-light); color: var(--warning); }
+  .stat-card.red   .stat-icon { background: var(--danger-light);  color: var(--danger);  }
+
+  .stat-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    font-family: 'DM Serif Display', serif;
+  }
+
+  .stat-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .stat-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Panel Cards (Charts, Alerts, Table) ── */
+  .panel {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .panel-head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-subtle);
+  }
+
+  .panel-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .panel-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .btn-refresh {
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: background 0.15s, color 0.15s, transform 0.3s;
+  }
+
+  .btn-refresh:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: rotate(180deg);
+  }
+
+  .panel-body { padding: 1.5rem; }
+
+  /* ── Alert Items ── */
+  .alert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 0.6rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .alert-item:last-child { margin-bottom: 0; }
+
+  .alert-item.danger {
+    background: var(--danger-light);
+    border: 1px solid var(--danger-border);
+  }
+
+  .alert-item.warning {
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+  }
+
+  .alert-item-text strong {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .alert-item-text small {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .btn-alert-action {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .btn-alert-action.danger-btn {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+  }
+
+  .btn-alert-action.warning-btn {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+  }
+
+  .btn-alert-action:hover { opacity: 0.75; }
+
+  /* No alerts state */
+  .no-alerts {
+    text-align: center;
+    padding: 2.5rem 1rem;
+  }
+
+  .no-alerts i { font-size: 2rem; color: var(--success); margin-bottom: 0.75rem; display: block; }
+  .no-alerts p { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+
+  /* ── Orders Table ── */
+  .orders-table { width: 100%; border-collapse: collapse; }
+  .orders-table th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+    background: var(--bg-subtle);
+  }
+
+  .orders-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  .orders-table tbody tr:last-child td { border-bottom: none; }
+  .orders-table tbody tr:hover { background: #fafbfc; }
+
+  .order-id { font-weight: 700; color: var(--primary); }
+
+  .badge-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success-border);
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .no-orders-row td {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
 </style>
 
-<div class="container-fluid py-4">
+<div class="dashboard-page">
     <!-- Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Dashboard Overview</h1>
-                <div class="text-muted">
-                    <small><i class="fas fa-sync-alt me-1"></i>Last updated: <span id="lastUpdated">{{ current_time|date:"M d, Y H:i" }}</span></small>
-                </div>
+    <div class="dash-header">
+        <h1 class="dash-title">Dashboard Overview</h1>
+        <div class="last-updated">
+            <i class="fas fa-sync-alt"></i>
+            <span>Last updated: <strong id="lastUpdated">{{ current_time|date:"M d, Y H:i" }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 stats-row">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fas fa-pills"></i></div>
+                <div class="stat-value">{{ total_medicines }}</div>
+                <div class="stat-label">Total Medicines</div>
+                <div class="stat-desc">Across all categories</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card amber">
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-value">{{ low_stock_count }}</div>
+                <div class="stat-label">Low Stock Items</div>
+                <div class="stat-desc">Need restocking soon</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                <div class="stat-value">₹{{ total_revenue|floatformat:0 }}</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-desc">All-time sales</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card red">
+                <div class="stat-icon"><i class="fas fa-calendar-times"></i></div>
+                <div class="stat-value">{{ expired_count }}</div>
+                <div class="stat-label">Expired Items</div>
+                <div class="stat-desc">Require immediate attention</div>
             </div>
         </div>
     </div>
-    
-    <!-- Stats Row -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6">
-            <div class="stats-card primary">
-                <div class="stats-number">{{ total_medicines }}</div>
-                <div class="stats-label">Total Medicines</div>
-                <small class="text-muted">Across all categories</small>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="stats-card warning">
-                <div class="stats-number">{{ low_stock_count }}</div>
-                <div class="stats-label">Low Stock Items</div>
-                <small class="text-muted">Need restocking</small>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="stats-card success">
-                <div class="stats-number">₹{{ total_revenue|floatformat:0 }}</div>
-                <div class="stats-label">Total Revenue</div>
-                <small class="text-muted">All time sales</small>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="stats-card danger">
-                <div class="stats-number">{{ expired_count }}</div>
-                <div class="stats-label">Expired Items</div>
-                <small class="text-muted">Require attention</small>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Charts Row 1 -->
-    <div class="row mt-4">
-        
-        <!-- Stock Distribution Chart -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Stock Distribution</h3>
-                    <button class="refresh-btn" onclick="refreshStockChart()">
+
+    <!-- Charts Row -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-5 col-lg-5">
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-head-left">
+                        <i class="fas fa-chart-pie" style="color:var(--primary);font-size:0.85rem;"></i>
+                        <h5 class="panel-title">Stock Distribution</h5>
+                    </div>
+                    <button class="btn-refresh" onclick="refreshStockChart()" title="Refresh">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
-                <canvas id="stockDistributionChart" height="250"></canvas>
+                <div class="panel-body">
+                    <canvas id="stockDistributionChart" height="250"></canvas>
+                </div>
             </div>
         </div>
-        <!-- Category Distribution -->
+
         <div class="col-xl-4 col-lg-6">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Medicine Categories</h3>
-                    <button class="refresh-btn" onclick="refreshCategoryChart()">
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-head-left">
+                        <i class="fas fa-trophy" style="color:var(--warning);font-size:0.85rem;"></i>
+                        <h5 class="panel-title">Top Selling Medicines</h5>
+                    </div>
+                    <button class="btn-refresh" onclick="refreshTopProductsChart()" title="Refresh">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
-                <canvas id="categoryChart" height="250"></canvas>
-            </div>
-        </div>
-         <!-- Top Selling Medicines -->
-        <div class="col-xl-4 col-lg-6">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Top Selling Medicines</h3>
-                    <button class="refresh-btn" onclick="refreshTopProductsChart()">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+                <div class="panel-body">
+                    <canvas id="topProductsChart" height="250"></canvas>
                 </div>
-                <canvas id="topProductsChart" height="250"></canvas>
             </div>
         </div>
     </div>
-    
-    <!-- Alerts & Recent Activity -->
-    <div class="row mt-4">
-        <!-- Alerts Section -->
+
+    <!-- Alerts + Recent Orders -->
+    <div class="row g-3">
+        <!-- Alerts -->
         <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bell me-2 text-warning"></i>
-                        Inventory Alerts
-                    </h5>
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-head-left">
+                        <i class="fas fa-bell" style="color:var(--warning);font-size:0.85rem;"></i>
+                        <h5 class="panel-title">Inventory Alerts</h5>
+                    </div>
+                    {% if low_stock_medicines or expired_medicines %}
+                    <span style="font-size:0.75rem; color:var(--danger); font-weight:600;">
+                        {{ low_stock_medicines|length|add:expired_medicines|length }} issue{{ low_stock_medicines|length|add:expired_medicines|length|pluralize }}
+                    </span>
+                    {% endif %}
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     {% for medicine in low_stock_medicines %}
-                        <div class="alert-card">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ medicine.name }}</strong> - Only {{ medicine.quantity }} units left
-                                    <small class="text-muted d-block">Threshold: {{ medicine.low_stock_threshold }}</small>
-                                </div>
-                                <a href="{% url 'admin_product_management' %}" class="btn btn-sm btn-outline-primary">
-                                    Restock
-                                </a>
-                            </div>
+                    <div class="alert-item danger">
+                        <div class="alert-item-text">
+                            <strong>{{ medicine.name }}</strong>
+                            <small>Only {{ medicine.quantity }} units left &mdash; Threshold: {{ medicine.low_stock_threshold }}</small>
                         </div>
+                        <a href="{% url 'admin_product_management' %}" class="btn-alert-action danger-btn">
+                            Restock
+                        </a>
+                    </div>
                     {% endfor %}
-                    
+
                     {% for medicine in expired_medicines %}
-                        <div class="warning-card">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ medicine.name }}</strong> - Expired on {{ medicine.expiry_date }}
-                                    <small class="text-muted d-block">Batch: {{ medicine.batch_number }}</small>
-                                </div>
-                                <a href="{% url 'admin_product_management' %}" class="btn btn-sm btn-outline-warning">
-                                    Review
-                                </a>
-                            </div>
+                    <div class="alert-item warning">
+                        <div class="alert-item-text">
+                            <strong>{{ medicine.name }}</strong>
+                            <small>Expired on {{ medicine.expiry_date }} &mdash; Batch: {{ medicine.batch_number }}</small>
                         </div>
+                        <a href="{% url 'admin_product_management' %}" class="btn-alert-action warning-btn">
+                            Review
+                        </a>
+                    </div>
                     {% endfor %}
-                    
+
                     {% if not low_stock_medicines and not expired_medicines %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
-                            <p>No alerts at this time. Everything looks good!</p>
-                        </div>
+                    <div class="no-alerts">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No alerts at this time. Everything looks good!</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <!-- Recent Orders -->
         <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-shopping-bag me-2 text-primary"></i>
-                        Recent Orders
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for order in recent_orders %}
-                                <tr>
-                                    <td>#{{ order.id }}</td>
-                                    <td>{{ order.user.username }}</td>
-                                    <td>₹{{ order.final_amount }}</td>
-                                    <td>{{ order.order_date|date:"M d, Y" }}</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        No recent orders
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-head-left">
+                        <i class="fas fa-shopping-bag" style="color:var(--primary);font-size:0.85rem;"></i>
+                        <h5 class="panel-title">Recent Orders</h5>
                     </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td class="order-id">#{{ order.id }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td><strong>₹{{ order.final_amount }}</strong></td>
+                                <td>{{ order.order_date|date:"M d, Y" }}</td>
+                                <td><span class="badge-completed"><i class="fas fa-check"></i>Completed</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr class="no-orders-row">
+                                <td colspan="5">
+                                    <i class="fas fa-inbox" style="font-size:1.5rem; margin-bottom:0.5rem; display:block; color:var(--text-muted);"></i>
+                                    No recent orders found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-// Chart colors
 const chartColors = {
-    primary: '#3498db',
-    success: '#2ecc71',
-    warning: '#f39c12',
-    danger: '#e74c3c',
-    info: '#9b59b6',
-    dark: '#2c3e50',
-    light: '#ecf0f1'
+    primary: '#1a6eb5',
+    success: '#059669',
+    warning: '#d97706',
+    danger:  '#dc2626',
+    info:    '#0284c7',
+    slate:   '#64748b',
+    light:   '#f1f5f9'
 };
 
-// Global chart instances
-let stockChart, categoryChart, topProductsChart;
+let stockChart, topProductsChart;
 
-// Initialize all charts when page loads
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#94a3b8';
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeChartsWithRealData();
     startAutoRefresh();
 });
 
-// Initialize charts with real API data
 async function initializeChartsWithRealData() {
     await initializeStockDistributionChart();
-    await initializeCategoryChart();
     await initializeTopProductsChart();
     await updateDashboardStats();
 }
 
-// Stock Distribution Chart with Real Data
 async function initializeStockDistributionChart() {
     const ctx = document.getElementById('stockDistributionChart').getContext('2d');
-    
     try {
         const response = await fetch('/api/stock-data/');
         const data = await response.json();
-        
-        const stockData = {
-            labels: data.labels,
-            datasets: [{
-                data: data.data,
-                backgroundColor: data.colors,
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        };
-
-        stockChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: stockData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + ' items';
-                            }
-                        }
-                    }
-                },
-                cutout: '60%'
-            }
-        });
-    } catch (error) {
-        console.error('Error loading stock chart:', error);
-        // Fallback to template data if API fails
+        stockChart = createDoughnutChart(ctx, data.labels, data.data, data.colors);
+    } catch {
         initializeStockFallback(ctx);
     }
 }
 
-// Fallback for stock chart
 function initializeStockFallback(ctx) {
-    const totalMedicines = parseInt('{{ total_medicines|default:0 }}');
-    const lowStockCount = parseInt('{{ low_stock_count|default:0 }}');
-    const outOfStockCount = parseInt('{{ out_of_stock_count|default:0 }}');
-    const expiredCount = parseInt('{{ expired_count|default:0 }}');
-    const inStockCount = totalMedicines - (lowStockCount + outOfStockCount + expiredCount);
-    
-    const stockData = {
-        labels: ['In Stock', 'Low Stock', 'Out of Stock', 'Expired'],
-        datasets: [{
-            data: [inStockCount, lowStockCount, outOfStockCount, expiredCount],
-            backgroundColor: [
-                chartColors.success,
-                chartColors.warning,
-                chartColors.danger,
-                chartColors.dark
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-        }]
-    };
-
-    stockChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: stockData,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.parsed + ' items';
-                        }
-                    }
-                }
-            },
-            cutout: '60%'
-        }
-    });
+    const total     = parseInt('{{ total_medicines|default:0 }}');
+    const lowStock  = parseInt('{{ low_stock_count|default:0 }}');
+    const outStock  = parseInt('{{ out_of_stock_count|default:0 }}');
+    const expired   = parseInt('{{ expired_count|default:0 }}');
+    const inStock   = total - (lowStock + outStock + expired);
+    stockChart = createDoughnutChart(ctx,
+        ['In Stock', 'Low Stock', 'Out of Stock', 'Expired'],
+        [inStock, lowStock, outStock, expired],
+        [chartColors.success, chartColors.warning, chartColors.danger, chartColors.slate]
+    );
 }
 
-// Category Distribution Chart with Real Data
-async function initializeCategoryChart() {
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    
-    try {
-        const response = await fetch('/api/category-data/');
-        const data = await response.json();
-        
-        const categoryData = {
-            labels: data.labels,
-            datasets: [{
-                data: data.data,
-                backgroundColor: data.colors,
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        };
 
-        categoryChart = new Chart(ctx, {
-            type: 'pie',
-            data: categoryData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + ' medicines';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error loading category chart:', error);
-        // Fallback to template data if API fails
-        initializeCategoryFallback(ctx);
-    }
-}
-
-// Fallback for category chart
-function initializeCategoryFallback(ctx) {
-    const categoryData = {
-        labels: JSON.parse('{{ category_labels|escapejs }}') || ['Vitamin', 'Antibiotic', 'Painkiller'],
-        datasets: [{
-            data: JSON.parse('{{ category_data|escapejs }}') || [35, 25, 15],
-            backgroundColor: [
-                chartColors.primary,
-                chartColors.success,
-                chartColors.warning,
-                chartColors.danger,
-                chartColors.info
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-        }]
-    };
-
-    categoryChart = new Chart(ctx, {
-        type: 'pie',
-        data: categoryData,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.parsed + ' medicines';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Top Products Chart with Real Data
 async function initializeTopProductsChart() {
     const ctx = document.getElementById('topProductsChart').getContext('2d');
-    
     try {
         const response = await fetch('/api/top-medicines-data/');
         const data = await response.json();
-        
-        const topProductsData = {
-            labels: data.labels,
-            datasets: [{
-                label: 'Stock Quantity',
-                data: data.data,
-                backgroundColor: data.colors,
-                borderWidth: 0
-            }]
-        };
-
-        topProductsChart = new Chart(ctx, {
-            type: 'bar',
-            data: topProductsData,
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.x + ' units in stock';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + ' units';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error loading top products chart:', error);
-        // Fallback to template data if API fails
+        topProductsChart = createBarChart(ctx, data.labels, data.data, data.colors);
+    } catch {
         initializeTopProductsFallback(ctx);
     }
 }
 
-// Fallback for top products chart
 function initializeTopProductsFallback(ctx) {
-    const topProductsData = {
-        labels: JSON.parse('{{ top_medicine_labels|escapejs }}') || ['Paracetamol', 'Amoxicillin', 'Vitamin C', 'Ibuprofen', 'Cetirizine'],
-        datasets: [{
-            label: 'Stock Quantity',
-            data: JSON.parse('{{ top_medicine_data|escapejs }}') || [150, 120, 95, 80, 65],
-            backgroundColor: [
-                chartColors.primary,
-                chartColors.success,
-                chartColors.warning,
-                chartColors.danger,
-                chartColors.info
-            ],
-            borderWidth: 0
-        }]
-    };
+    const labels = JSON.parse('{{ top_medicine_labels|escapejs }}') || ['Paracetamol','Amoxicillin','Vitamin C','Ibuprofen','Cetirizine'];
+    const data   = JSON.parse('{{ top_medicine_data|escapejs }}')   || [150, 120, 95, 80, 65];
+    topProductsChart = createBarChart(ctx, labels, data,
+        [chartColors.primary, chartColors.success, chartColors.warning, chartColors.danger, chartColors.info]
+    );
+}
 
-    topProductsChart = new Chart(ctx, {
-        type: 'bar',
-        data: topProductsData,
+function createDoughnutChart(ctx, labels, data, colors) {
+    return new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
         options: {
-            indexAxis: 'y',
             responsive: true,
+            cutout: '65%',
             plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.x + ' units in stock';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value + ' units';
-                        }
-                    }
-                }
+                legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } },
+                tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' items' } }
             }
         }
     });
 }
 
-// Update dashboard statistics
+function createPieChart(ctx, labels, data, colors) {
+    return new Chart(ctx, {
+        type: 'pie',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } },
+                tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + ' medicines' } }
+            }
+        }
+    });
+}
+
+function createBarChart(ctx, labels, data, colors) {
+    return new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Stock Quantity', data, backgroundColor: colors, borderWidth: 0, borderRadius: 5 }] },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => c.parsed.x + ' units' } }
+            },
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v + ' units' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+}
+
 async function updateDashboardStats() {
     try {
-        const response = await fetch('/api/dashboard-stats/');
-        const data = await response.json();
-        
-        // Update the last updated timestamp
-        document.getElementById('lastUpdated').textContent = data.last_updated;
-        
-        console.log('Dashboard stats updated');
-    } catch (error) {
-        console.error('Error updating dashboard stats:', error);
-        // Fallback to template timestamp
-        const now = new Date();
-        document.getElementById('lastUpdated').textContent = now.toLocaleString();
+        const r = await fetch('/api/dashboard-stats/');
+        const d = await r.json();
+        document.getElementById('lastUpdated').textContent = d.last_updated;
+    } catch {
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
     }
 }
 
-// Refresh functions that update charts with latest data
-async function refreshStockChart() {
+async function refreshChartData(url, chart) {
     try {
-        const response = await fetch('/api/stock-data/');
-        const data = await response.json();
-        
-        if (stockChart) {
-            stockChart.data.labels = data.labels;
-            stockChart.data.datasets[0].data = data.data;
-            stockChart.data.datasets[0].backgroundColor = data.colors;
-            stockChart.update();
+        const r = await fetch(url);
+        const d = await r.json();
+        if (chart) {
+            chart.data.labels = d.labels;
+            chart.data.datasets[0].data = d.data;
+            chart.data.datasets[0].backgroundColor = d.colors;
+            chart.update();
         }
         await updateDashboardStats();
-        console.log('Stock chart refreshed with latest data');
-    } catch (error) {
-        console.error('Error refreshing stock chart:', error);
-    }
+    } catch(e) { console.error(e); }
 }
 
-async function refreshCategoryChart() {
-    try {
-        const response = await fetch('/api/category-data/');
-        const data = await response.json();
-        
-        if (categoryChart) {
-            categoryChart.data.labels = data.labels;
-            categoryChart.data.datasets[0].data = data.data;
-            categoryChart.data.datasets[0].backgroundColor = data.colors;
-            categoryChart.update();
-        }
-        await updateDashboardStats();
-        console.log('Category chart refreshed with latest data');
-    } catch (error) {
-        console.error('Error refreshing category chart:', error);
-    }
-}
+async function refreshStockChart()       { await refreshChartData('/api/stock-data/', stockChart); }
+async function refreshTopProductsChart() { await refreshChartData('/api/top-medicines-data/', topProductsChart); }
 
-async function refreshTopProductsChart() {
-    try {
-        const response = await fetch('/api/top-medicines-data/');
-        const data = await response.json();
-        
-        if (topProductsChart) {
-            topProductsChart.data.labels = data.labels;
-            topProductsChart.data.datasets[0].data = data.data;
-            topProductsChart.data.datasets[0].backgroundColor = data.colors;
-            topProductsChart.update();
-        }
-        await updateDashboardStats();
-        console.log('Top products chart refreshed with latest data');
-    } catch (error) {
-        console.error('Error refreshing top products chart:', error);
-    }
-}
-
-// Refresh all charts
-async function refreshAllCharts() {
-    await refreshStockChart();
-    await refreshCategoryChart();
-    await refreshTopProductsChart();
-    console.log('All charts refreshed at: ' + new Date().toLocaleString());
-}
-
-// Auto-refresh dashboard every 30 seconds
 function startAutoRefresh() {
     setInterval(() => {
-        refreshAllCharts();
-    }, 30000); // 30 seconds
+        refreshStockChart();
+        refreshTopProductsChart();
+    }, 30000);
 }
-
-// Real-time data updates
-function simulateRealTimeUpdates() {
-    setInterval(() => {
-        // Monitor for data changes
-        console.log('Monitoring for data changes...');
-    }, 10000); // Every 10 seconds
-}
-
-// Initialize real-time updates
-simulateRealTimeUpdates();
 </script>
 {% endblock %}

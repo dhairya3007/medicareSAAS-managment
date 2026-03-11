@@ -1,162 +1,344 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'home' %}" class="text-decoration-none">Home</a>
-            </li>
-            <li class="breadcrumb-item active">{{ medicine.name }}</li>
-        </ol>
-    </nav>
-
-    <!-- Main Product Section -->
-    <div class="row g-4 mb-5">
-        <!-- Product Image -->
-        <div class="col-md-6">
-            <div class="bg-light rounded p-3 text-center">
-                <img src="{{ medicine.image.url }}" 
-                     alt="{{ medicine.name }}" 
-                     class="img-fluid rounded" 
-                     style="max-height: 400px; object-fit: contain;">
-            </div>
-        </div>
-
-        <!-- Product Details -->
-        <div class="col-md-6">
-            <!-- Medicine Name & Company -->
-            <h1 class="h2 fw-bold mb-2">{{ medicine.name }}</h1>
-            <p class="text-muted mb-3">{{ medicine.company_name }}</p>
-            
-            <!-- Badges -->
-            <div class="mb-3">
-                <span class="badge bg-primary me-2">{{ medicine.power }}</span>
-                <span class="badge bg-secondary">#{{ medicine.product_number }}</span>
-            </div>
-            
-            <!-- Price -->
-            <h3 class="text-success mb-4">₹{{ medicine.price }}</h3>
-            
-            <!-- Stock Status -->
-            <div class="border rounded p-3 mb-4">
-                <h6 class="mb-2">Stock Status</h6>
-                {% if medicine.quantity > 0 %}
-                    <p class="text-success mb-0">
-                        <i class="fas fa-check-circle me-1"></i>
-                        In Stock ({{ medicine.quantity }} available)
-                    </p>
-                {% else %}
-                    <p class="text-danger mb-0">
-                        <i class="fas fa-times-circle me-1"></i>
-                        Out of Stock
-                    </p>
-                {% endif %}
-            </div>
-            
-            <!-- Components -->
-            <div class="mb-4">
-                <h6>Components</h6>
-                <p class="text-muted">{{ medicine.components }}</p>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="d-grid gap-2">
-                {% if user.is_authenticated %}
-                    {% if medicine.quantity > 0 %}
-                        <form method="post" action="{% url 'add_to_cart' medicine.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary btn-lg w-100">
-                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
-                            </button>
-                        </form>
-                    {% else %}
-                        <button class="btn btn-secondary btn-lg w-100" disabled>
-                            Out of Stock
-                        </button>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg w-100">
-                        Login to Purchase
-                    </a>
-                {% endif %}
-                
-                <a href="{% url 'home' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Medicine Information -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h4 class="mb-0">Medicine Information</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <h6>Description</h6>
-                            <p class="text-muted">{{ medicine_info.description }}</p>
-                            
-                            <h6>Uses</h6>
-                            <p class="text-muted">{{ medicine_info.uses }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Side Effects</h6>
-                            <p class="text-muted">{{ medicine_info.side_effects }}</p>
-                            
-                            <h6>Precautions</h6>
-                            <p class="text-muted">{{ medicine_info.precautions }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    .breadcrumb {
-        background: none;
-        padding: 0;
-    }
-    
-    .card {
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
-    }
-    
-    .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        padding: 1rem 1.25rem;
-    }
-    
-    .btn {
-        border-radius: 0.375rem;
-    }
-    
-    .badge {
-        font-size: 0.875em;
-    }
-    
-    @media (max-width: 768px) {
-        .container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        .h2 {
-            font-size: 1.5rem;
-        }
-        
-        .btn-lg {
-            font-size: 1rem;
-        }
-    }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap');
+
+  .pd-page {
+    background: #f0f4f8;
+    min-height: 100vh;
+    padding: 2rem 0 4rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .pd-container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* Breadcrumb */
+  .pd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 1.75rem;
+  }
+  .pd-breadcrumb a { color: #1a6eb5; text-decoration: none; font-weight: 500; }
+  .pd-breadcrumb a:hover { text-decoration: underline; }
+  .pd-breadcrumb .sep { color: #cbd5e1; }
+
+  /* Main Product Card */
+  .pd-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 24px rgba(0,0,0,0.07);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .pd-main { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+
+  @media (max-width: 768px) {
+    .pd-main { grid-template-columns: 1fr; }
+  }
+
+  /* Image Panel */
+  .pd-image-panel {
+    background: #f8fafc;
+    border-right: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    min-height: 380px;
+  }
+
+  .pd-image-panel img {
+    max-height: 320px;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  /* Details Panel */
+  .pd-details-panel { padding: 2.5rem; }
+
+  .pd-company {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #1a6eb5;
+    margin-bottom: 0.5rem;
+  }
+
+  .pd-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.85rem;
+    color: #0f172a;
+    margin: 0 0 1rem;
+    line-height: 1.2;
+  }
+
+  .pd-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+  .pd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-blue { background: #eff6ff; color: #1d4ed8; }
+  .badge-slate { background: #f1f5f9; color: #475569; }
+
+  .pd-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 1.5rem;
+  }
+
+  .pd-price sup { font-size: 1rem; vertical-align: super; font-weight: 600; color: #475569; }
+
+  /* Stock Box */
+  .pd-stock-box {
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .stock-in { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+  .stock-out { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+
+  /* Components */
+  .pd-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 0.4rem;
+  }
+
+  .pd-components {
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+  }
+
+  /* Action Buttons */
+  .pd-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .btn-add-cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.5rem;
+    background: linear-gradient(135deg, #0f4c81, #1a6eb5);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.975rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    text-decoration: none;
+  }
+
+  .btn-add-cart:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+  .btn-add-cart:disabled, .btn-add-cart.disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background: transparent;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    text-decoration: none;
+  }
+
+  .btn-back:hover { background: #f8fafc; border-color: #cbd5e1; color: #475569; }
+
+  /* Info Card */
+  .info-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 24px rgba(0,0,0,0.07);
+    overflow: hidden;
+  }
+
+  .info-card-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .info-card-header h4 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .info-card-body { padding: 2rem; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+
+  @media (max-width: 768px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #1a6eb5;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .info-section-text {
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-section-text:last-child { margin-bottom: 0; }
 </style>
+
+<div class="pd-page">
+  <div class="pd-container">
+
+    <!-- Breadcrumb -->
+    <div class="pd-breadcrumb">
+      <a href="{% url 'home' %}"><i class="fas fa-home me-1"></i>Home</a>
+      <span class="sep"><i class="fas fa-chevron-right" style="font-size:0.65rem;"></i></span>
+      <span>{{ medicine.name }}</span>
+    </div>
+
+    <!-- Main Product Card -->
+    <div class="pd-card">
+      <div class="pd-main">
+
+        <!-- Image -->
+        <div class="pd-image-panel">
+          <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}">
+        </div>
+
+        <!-- Details -->
+        <div class="pd-details-panel">
+          <div class="pd-company">{{ medicine.company_name }}</div>
+          <h1 class="pd-name">{{ medicine.name }}</h1>
+
+          <div class="pd-badges">
+            <span class="pd-badge badge-blue"><i class="fas fa-pills"></i>{{ medicine.power }}</span>
+            <span class="pd-badge badge-slate"><i class="fas fa-barcode"></i>#{{ medicine.product_number }}</span>
+          </div>
+
+          <div class="pd-price"><sup>₹</sup>{{ medicine.price }}</div>
+
+          {% if medicine.quantity > 0 %}
+          <div class="pd-stock-box stock-in">
+            <i class="fas fa-check-circle"></i>
+            In Stock &mdash; {{ medicine.quantity }} units available
+          </div>
+          {% else %}
+          <div class="pd-stock-box stock-out">
+            <i class="fas fa-times-circle"></i>
+            Currently Out of Stock
+          </div>
+          {% endif %}
+
+          <div class="pd-section-label">Active Components</div>
+          <div class="pd-components">{{ medicine.components }}</div>
+
+          <div class="pd-actions">
+            {% if user.is_authenticated %}
+              {% if medicine.quantity > 0 %}
+                <form method="post" action="{% url 'add_to_cart' medicine.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-add-cart">
+                    <i class="fas fa-cart-plus"></i>Add to Cart
+                  </button>
+                </form>
+              {% else %}
+                <button class="btn-add-cart disabled" disabled>
+                  <i class="fas fa-ban"></i>Out of Stock
+                </button>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'login' %}" class="btn-add-cart">
+                <i class="fas fa-sign-in-alt"></i>Login to Purchase
+              </a>
+            {% endif %}
+
+            <a href="{% url 'home' %}" class="btn-back">
+              <i class="fas fa-arrow-left"></i>Continue Shopping
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Medicine Info Card -->
+    <div class="info-card">
+      <div class="info-card-header">
+        <i class="fas fa-file-medical-alt" style="color:#1a6eb5;"></i>
+        <h4>Medicine Information</h4>
+      </div>
+      <div class="info-card-body">
+        <div class="info-grid">
+          <div>
+            <div class="info-section-title"><i class="fas fa-info-circle"></i>Description</div>
+            <div class="info-section-text">{{ medicine_info.description }}</div>
+
+            <div class="info-section-title"><i class="fas fa-stethoscope"></i>Uses</div>
+            <div class="info-section-text">{{ medicine_info.uses }}</div>
+          </div>
+          <div>
+            <div class="info-section-title"><i class="fas fa-exclamation-triangle"></i>Side Effects</div>
+            <div class="info-section-text">{{ medicine_info.side_effects }}</div>
+
+            <div class="info-section-title"><i class="fas fa-shield-alt"></i>Precautions</div>
+            <div class="info-section-text">{{ medicine_info.precautions }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 {% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.admin-page {
+    font-family: 'DM Sans', sans-serif;
+    padding-bottom: 4rem;
+}
+
+/* Header */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.admin-title i {
+    color: var(--primary);
+}
+
+.back-link {
+    text-decoration: none;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.back-link:hover {
+    color: var(--text-primary);
+}
+
+/* Panel */
+.admin-panel {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    max-width: 600px;
+    margin: auto;
+}
+
+.panel-head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.panel-body {
+    padding: 1.5rem;
+}
+
+/* Form */
+.form-label-custom {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    display: block;
+}
+
+.form-control,
+.form-textarea {
+    width: 100%;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+    background: var(--bg-subtle);
+    transition: 0.2s;
+}
+
+.form-control:focus,
+.form-textarea:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--primary-ring);
+    outline: none;
+}
+
+/* Buttons */
+.btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-primary-custom:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 576px) {
+    .panel-body {
+        padding: 1.2rem;
+    }
+}
+</style>
+
+<div class="admin-page">
+
+    <!-- Header -->
+    <div class="admin-header">
+        <h1 class="admin-title">
+            <i class="fas fa-edit"></i> Edit Category
+        </h1>
+
+        <a href="{% url 'org_admin_categories' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Categories
+        </a>
+    </div>
+
+    <!-- Panel -->
+    <div class="admin-panel">
+        <div class="panel-head">
+            <i class="fas fa-folder-open" style="color:var(--primary);font-size:0.9rem;"></i>
+            <h5 class="panel-title">Update Category Details</h5>
+        </div>
+
+        <div class="panel-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label-custom">Category Name</label>
+                    <input type="text"
+                           name="name"
+                           value="{{ category.name }}"
+                           class="form-control"
+                           required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Description</label>
+                    <textarea name="description"
+                              rows="4"
+                              class="form-textarea">{{ category.description }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fas fa-check-circle"></i> Update Category
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

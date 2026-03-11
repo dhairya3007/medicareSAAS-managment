@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.admin-page {
+    font-family: 'DM Sans', sans-serif;
+    padding-bottom: 4rem;
+}
+
+/* Header */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.admin-title i {
+    color: var(--primary);
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.2rem;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.btn-add:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Panel */
+.admin-panel {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.panel-head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Table */
+.supplier-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.supplier-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    padding: 0.85rem 1rem;
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+}
+
+.supplier-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.supplier-table tbody tr:hover {
+    background: #fafbfc;
+}
+
+/* Buttons */
+.btn-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.btn-edit:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.4rem;
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+/* Mobile Cards */
+.mobile-supplier-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem;
+    margin-bottom: 0.75rem;
+    transition: box-shadow 0.2s;
+}
+
+.mobile-supplier-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.supplier-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+@media (max-width: 992px) {
+    .d-lg-block { display: none; }
+}
+
+@media (min-width: 993px) {
+    .d-lg-none { display: none; }
+}
+</style>
+
+<div class="admin-page">
+
+    <!-- Header -->
+    <div class="admin-header">
+        <h1 class="admin-title">
+            <i class="fas fa-truck"></i> Suppliers
+        </h1>
+
+        <a href="{% url 'org_admin_add_supplier' %}" class="btn-add">
+            <i class="fas fa-plus"></i> Add Supplier
+        </a>
+    </div>
+
+    <!-- Panel -->
+    <div class="admin-panel">
+        <div class="panel-head">
+            <h5 class="panel-title">All Suppliers</h5>
+            <span style="font-size:0.8rem;color:var(--text-muted);">
+                Total: {{ suppliers|length }}
+            </span>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="d-lg-block table-responsive">
+            <table class="supplier-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact Person</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th style="width:220px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for supplier in suppliers %}
+                    <tr>
+                        <td>{{ supplier.name }}</td>
+                        <td>{{ supplier.contact_person|default:"—" }}</td>
+                        <td>{{ supplier.phone|default:"—" }}</td>
+                        <td>{{ supplier.email|default:"—" }}</td>
+                        <td>
+                            <a href="{% url 'org_admin_edit_supplier' supplier.id %}" class="btn-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'org_admin_delete_supplier' supplier.id %}"
+                               class="btn-delete"
+                               onclick="return confirm('Delete this supplier?');">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:1.5rem;">
+                            No suppliers found.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="d-lg-none p-3">
+            {% for supplier in suppliers %}
+            <div class="mobile-supplier-card">
+                <strong>{{ supplier.name }}</strong>
+
+                <div class="supplier-meta">
+                    Contact: {{ supplier.contact_person|default:"—" }}
+                </div>
+                <div class="supplier-meta">
+                    Phone: {{ supplier.phone|default:"—" }}
+                </div>
+                <div class="supplier-meta">
+                    Email: {{ supplier.email|default:"—" }}
+                </div>
+
+                <div class="mt-3">
+                    <a href="{% url 'org_admin_edit_supplier' supplier.id %}" class="btn-edit">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'org_admin_delete_supplier' supplier.id %}"
+                       class="btn-delete"
+                       onclick="return confirm('Delete this supplier?');">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+                <p class="p-3">No suppliers found.</p>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

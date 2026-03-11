@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+.admin-page {
+    font-family: 'DM Sans', sans-serif;
+    padding-bottom: 4rem;
+}
+
+/* Welcome Section */
+.dashboard-hero {
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff;
+    padding: 2.2rem 2rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+}
+
+.dashboard-hero h2 {
+    font-family: 'DM Serif Display', serif;
+    margin: 0 0 0.4rem 0;
+    font-size: 1.6rem;
+}
+
+.dashboard-hero p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    box-shadow: var(--shadow-sm);
+    transition: 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+    color: var(--primary);
+}
+
+.stat-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: 0.3rem;
+}
+
+/* Management Cards */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.2rem;
+}
+
+.dashboard-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard-card h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.dashboard-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.dashboard-card a {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.dashboard-card a:hover {
+    color: #065f46;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .dashboard-hero {
+        padding: 1.8rem 1.2rem;
+    }
+}
+</style>
+
+<div class="admin-page">
+
+    <!-- Welcome -->
+    <div class="dashboard-hero">
+        <h2>Welcome, {{ request.user.username }}</h2>
+        <p>Manage your organization’s users, inventory, suppliers and categories from one place.</p>
+    </div>
+
+    <!-- Management -->
+    <div class="card-grid">
+
+        <div class="dashboard-card">
+            <h4>User Management</h4>
+            <p>Create, edit and manage organization staff members.</p>
+            <a href="{% url 'org_admin_users' %}">
+                Manage Users <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="dashboard-card">
+            <h4>Product Management</h4>
+            <p>Add, edit and monitor medicines inventory.</p>
+            <a href="{% url 'admin_product_management' %}">
+                Manage Products <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="dashboard-card">
+            <h4>Categories</h4>
+            <p>Organize medicines into structured groups.</p>
+            <a href="{% url 'org_admin_categories' %}">
+                Manage Categories <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="dashboard-card">
+            <h4>Suppliers</h4>
+            <p>Manage supplier information and contact details.</p>
+            <a href="{% url 'org_admin_suppliers' %}">
+                Manage Suppliers <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

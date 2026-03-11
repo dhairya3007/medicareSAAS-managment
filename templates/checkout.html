@@ -2,110 +2,284 @@
 
 {% block content %}
 <style>
-/* General page styles */
-.container {
-    max-width: 1200px;
-}
-.card {
-    border-radius: 16px;
-    box-shadow: var(--shadow-md);
-    margin-bottom: 2rem;
-}
-.card-header {
-    background: #f1f5f9;
-    font-weight: 600;
-}
-.card-body {
-    padding: 1.5rem;
-}
-.btn {
-    border-radius: 12px;
-}
+  .checkout-page { font-family: 'DM Sans', sans-serif; padding-bottom: 4rem; }
 
-/* Print-only styles */
-@media print {
+  .page-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    margin: 0 0 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .page-heading i { color: var(--primary); font-size: 1.35rem; }
+
+  /* ── Shared card style ── */
+  .co-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .co-card-head {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-subtle);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .co-card-head span {
+    font-size: 0.775rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+  }
+
+  .co-card-body { padding: 1.5rem; }
+
+  /* ── Order Items ── */
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .order-row:last-child { border-bottom: none; }
+
+  .order-item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.925rem;
+  }
+
+  .order-item-qty {
+    font-size: 0.825rem;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .order-item-price {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.925rem;
+  }
+
+  /* ── Payment Summary ── */
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .summary-line .s-val { font-weight: 600; color: var(--text-primary); }
+
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0 0.5rem;
+    border-top: 2px solid var(--border-color);
+    margin-top: 0.5rem;
+  }
+
+  .summary-total .t-label { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+  .summary-total .t-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+
+  /* Discount input */
+  .discount-wrap {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .discount-label {
+    font-size: 0.775rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .discount-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .discount-input-row:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+  }
+
+  .discount-input {
+    flex: 1;
+    border: none;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.925rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    outline: none;
+    background: transparent;
+  }
+
+  .discount-suffix {
+    padding: 0.65rem 0.85rem;
+    background: var(--bg-subtle);
+    border-left: 1px solid var(--border-color);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  /* Buttons */
+  .btn-complete {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    text-decoration: none;
+  }
+
+  .btn-complete:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+
+  .btn-print {
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+  }
+
+  .btn-print:hover { background: var(--primary-light); }
+
+  /* Print-only */
+  @media print {
     body * { visibility: hidden; }
     #printable, #printable * { visibility: visible; }
     #printable { position: absolute; top: 0; left: 0; width: 100%; }
-    button { display: none; }
-}
+    button { display: none !important; }
+  }
 </style>
 
-<div class="container py-5">
-    <h1 class="text-center mb-5">Checkout</h1>
+<div class="checkout-page">
+    <h1 class="page-heading"><i class="fas fa-credit-card"></i>Checkout</h1>
 
-    <div class="row">
+    <div class="row g-4">
+        <!-- Order Items -->
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Order Items</h5>
+            <div class="co-card">
+                <div class="co-card-head">
+                    <i class="fas fa-box" style="color:var(--text-muted); font-size:0.85rem;"></i>
+                    <span>Order Items</span>
                 </div>
-                <div class="card-body">
+                <div class="co-card-body">
                     {% for item in cart_items %}
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-6">
-                            <h6 class="mb-0">{{ item.medicine.name }}</h6>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <span class="fw-bold">x{{ item.quantity }}</span>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <span class="fw-bold">₹{{ item.total }}</span>
-                        </div>
+                    <div class="order-row">
+                        <span class="order-item-name">{{ item.medicine.name }}</span>
+                        <span class="order-item-qty">× {{ item.quantity }}</span>
+                        <span class="order-item-price">₹{{ item.total }}</span>
                     </div>
-                    <hr>
                     {% endfor %}
                 </div>
             </div>
         </div>
 
+        <!-- Payment Summary -->
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Payment Summary</h5>
+            <div class="co-card">
+                <div class="co-card-head">
+                    <i class="fas fa-receipt" style="color:var(--text-muted); font-size:0.85rem;"></i>
+                    <span>Payment Summary</span>
                 </div>
-                <div class="card-body">
+                <div class="co-card-body">
                     <form method="post" id="checkoutForm">
                         {% csrf_token %}
 
                         {% if user.is_staff %}
-                        <div class="mb-3">
-                            <label for="discount" class="form-label">Discount Percentage</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control discount-input" id="discount"
-                                       name="discount" min="0" max="100" value="0" step="0.1" oninput="calculateDiscount()">
-                                <span class="input-group-text">%</span>
+                        <div class="discount-wrap">
+                            <div class="discount-label">
+                                <i class="fas fa-tag"></i>Staff Discount
                             </div>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Subtotal:</span>
-                            <span>₹{{ total }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Discount:</span>
-                            <span id="discountAmount">₹0.00</span>
-                        </div>
-                        {% else %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Subtotal:</span>
-                            <span>₹{{ total }}</span>
+                            <div class="discount-input-row">
+                                <input type="number" class="discount-input" id="discount"
+                                       name="discount" min="0" max="100" value="0" step="0.1"
+                                       oninput="calculateDiscount()" placeholder="0">
+                                <span class="discount-suffix">%</span>
+                            </div>
                         </div>
                         {% endif %}
 
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
-                            <span>Total:</span>
-                            <span id="finalAmount">₹{{ total }}</span>
-                            <input type="hidden" id="finalAmountInput" name="final_amount" value="{{ total }}">
+                        <div class="summary-line">
+                            <span>Subtotal</span>
+                            <span class="s-val">₹{{ total }}</span>
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100 btn-lg mb-3">
-                            <i class="fas fa-check-circle me-2"></i>Complete Purchase
-                        </button>
+                        {% if user.is_staff %}
+                        <div class="summary-line">
+                            <span>Discount</span>
+                            <span class="s-val" id="discountAmount" style="color:var(--success);">₹0.00</span>
+                        </div>
+                        {% endif %}
 
-                       <!-- Replace the print button with a simple message -->
-                        <button type="button" class="btn btn-outline-primary w-100 btn-lg" onclick="alert('PDF export feature coming soon!')">
-                            <i class="fas fa-print me-2"></i>Print / Save as PDF
+                        <div class="summary-total">
+                            <span class="t-label">Total</span>
+                            <span class="t-value" id="finalAmount">₹{{ total }}</span>
+                        </div>
+
+                        <input type="hidden" id="totalAmount" data-total="{{ total }}">
+                        <input type="hidden" id="finalAmountInput" name="final_amount" value="{{ total }}">
+
+                        <button type="submit" class="btn-complete">
+                            <i class="fas fa-check-circle"></i>Complete Purchase
                         </button>
                     </form>
                 </div>
@@ -114,17 +288,13 @@
     </div>
 </div>
 
-<!-- Printable bill section -->
+<!-- Printable Bill -->
 <div id="printable" style="display:none;">
     <h2>Purchase Bill</h2>
-    <p><strong>Date & Time:</strong> {{ now|date:"d-m-Y H:i:s" }}</p>
-    <table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <p><strong>Date &amp; Time:</strong> {{ now|date:"d-m-Y H:i:s" }}</p>
+    <table width="100%" border="1" cellspacing="0" cellpadding="6">
         <thead>
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price</th>
-            </tr>
+            <tr><th>Product</th><th>Qty</th><th>Price</th></tr>
         </thead>
         <tbody>
             {% for item in cart_items %}
@@ -135,7 +305,7 @@
             </tr>
             {% endfor %}
             <tr>
-                <td colspan="2" style="text-align:right;"><strong>Total:</strong></td>
+                <td colspan="2" style="text-align:right;"><strong>Total</strong></td>
                 <td>₹{{ total }}</td>
             </tr>
         </tbody>
@@ -145,35 +315,17 @@
 <script>
 function calculateDiscount() {
     const total = parseFloat('{{ total }}');
-    const discountInput = document.getElementById('discount');
-    const discountAmountElement = document.getElementById('discountAmount');
-    const finalAmountElement = document.getElementById('finalAmount');
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const discountAmt = total * (discount / 100);
+    const finalAmt = total - discountAmt;
 
-    if (discountInput && discountAmountElement && finalAmountElement) {
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountAmount = total * (discount / 100);
-        const finalAmount = total - discountAmount;
+    const discEl = document.getElementById('discountAmount');
+    if (discEl) discEl.textContent = '₹' + discountAmt.toFixed(2);
 
-        discountAmountElement.textContent = '₹' + discountAmount.toFixed(2);
-        finalAmountElement.textContent = '₹' + finalAmount.toFixed(2);
-
-        document.getElementById('finalAmountInput').value = finalAmount.toFixed(2);
-    }
+    document.getElementById('finalAmount').textContent = '₹' + finalAmt.toFixed(2);
+    document.getElementById('finalAmountInput').value = finalAmt.toFixed(2);
 }
 
-// Initialize discount
-document.addEventListener('DOMContentLoaded', function() {
-    calculateDiscount();
-});
-
-function printBill() {
-    const printContent = document.getElementById('printable').innerHTML;
-    const originalContent = document.body.innerHTML;
-
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    location.reload(); // reload to restore JS and CSS
-}
+document.addEventListener('DOMContentLoaded', calculateDiscount);
 </script>
 {% endblock %}
