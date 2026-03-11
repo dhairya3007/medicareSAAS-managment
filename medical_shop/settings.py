@@ -155,3 +155,8 @@ CELERY_BROKER_URL = os.environ.get("REDIS_URL")
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+from django.contrib.auth.models import User
+
+if not User.objects.filter(username="admin").exists():
+    User.objects.create_superuser("admin", "admin@example.com", "admin123")
