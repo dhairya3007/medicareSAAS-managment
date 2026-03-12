@@ -552,7 +552,13 @@ def api_update_medicine(request, medicine_id):
 @require_http_methods(["POST"])
 
 def api_add_medicine(request):
-    form = MedicineForm(request.POST, request.FILES)
+    org = get_user_organization(request)
+
+    form = MedicineForm(
+        request.POST,
+        request.FILES,
+        organization=org
+    )
 
     if form.is_valid():
         medicine = form.save(commit=False)
@@ -575,12 +581,13 @@ def api_add_medicine(request):
                 'image_url': medicine.image.url if medicine.image else ''
             }
         })
-
-    return JsonResponse({
-        'status': 'error',
-        'message': 'Form validation failed',
-        'errors': form.errors
-    }, status=400)
+    else:
+        print("FORM ERRORS:", form.errors)
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Form validation failed',
+            'errors': form.errors
+        }, status=400)
 
 
 @org_staff_required
@@ -1029,3 +1036,41 @@ def invoice_preview(request, order_id):
         "items": items,
         "pdf": False
     })
+from django.shortcuts import render
+from .models import Medicine, UserProfile
+
+@login_required
+@org_staff_required
+def network_medicine_search(request):
+
+    query = request.GET.get("q")
+    results = []
+
+    if query:
+
+        current_org = request.user.userprofile.organization
+
+        medicines = Medicine.objects.filter(
+            name__icontains=query,
+            quantity__gt=0,
+            organization__allow_inventory_sharing=True
+        ).exclude(
+            organization=current_org
+        )
+
+        for med in medicines:
+
+            contact = UserProfile.objects.filter(
+                organization=med.organization,
+                role="pharmacist"
+            ).first()
+
+            results.append({
+                "medicine": med.name,
+                "pharmacy": med.organization.name,
+                "address": med.organization.address,
+                "contact_name": contact.user.username if contact else "N/A",
+                "phone": contact.phone if contact else "N/A"
+            })
+
+    return render(request, "network_search.html", {"results": results})

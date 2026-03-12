@@ -25,5 +25,10 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
+    allow_inventory_sharing = models.BooleanField(default=True)
+
+    # NEW FIELD
+    address = models.TextField(blank=True)
+
     def __str__(self):
         return self.name

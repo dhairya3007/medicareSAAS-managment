@@ -408,6 +408,9 @@
   @media (max-width: 992px) {
     .stat-badges { display: none; }
   }
+  .status-badge{
+    margin-right:5px;
+}
 </style>
 
 <div class="admin-page">
@@ -585,9 +588,14 @@
                                    value="{{ medicine.price }}" data-field="price" data-id="{{ medicine.id }}">
                         </td>
                         <td>
-                            <input type="number" class="form-control form-control-sm"
-                                   value="{{ medicine.quantity }}" data-field="quantity" data-id="{{ medicine.id }}">
-                        </td>
+    <input type="number" class="form-control form-control-sm"
+           value="{{ medicine.quantity }}" data-field="quantity" data-id="{{ medicine.id }}">
+
+    <!-- hidden threshold value for JS -->
+    <input type="hidden"
+           value="{{ medicine.low_stock_threshold }}"
+           data-field="low_stock_threshold">
+</td>
                         <td>
                             {% if medicine.expiry_date %}
                                 <input type="date" class="form-control form-control-sm"
@@ -601,16 +609,30 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if medicine.quantity == 0 %}
-                                <span class="status-badge out-stock"><i class="fas fa-times-circle"></i>Out of Stock</span>
-                            {% elif medicine.is_low_stock %}
-                                <span class="status-badge low-stock"><i class="fas fa-exclamation-triangle"></i>Low Stock</span>
-                            {% elif medicine.is_expired %}
-                                <span class="status-badge expired"><i class="fas fa-calendar-times"></i>Expired</span>
-                            {% else %}
-                                <span class="status-badge in-stock"><i class="fas fa-check-circle"></i>In Stock</span>
-                            {% endif %}
-                        </td>
+    {% if medicine.quantity > medicine.low_stock_threshold and not medicine.is_expired %}
+    <span class="status-badge in-stock">
+        <i class="fas fa-check-circle"></i>In Stock
+    </span>
+{% endif %}
+
+{% if medicine.quantity <= medicine.low_stock_threshold and medicine.quantity > 0 %}
+    <span class="status-badge low-stock">
+        <i class="fas fa-exclamation-triangle"></i>Low Stock
+    </span>
+{% endif %}
+
+{% if medicine.quantity == 0 %}
+    <span class="status-badge out-stock">
+        <i class="fas fa-times-circle"></i>Out of Stock
+    </span>
+{% endif %}
+
+{% if medicine.is_expired %}
+    <span class="status-badge expired">
+        <i class="fas fa-calendar-times"></i>Expired
+    </span>
+{% endif %}
+</td>
                         <td>
                             <div class="action-btns">
                                 <button class="btn-save-row save-btn" data-id="{{ medicine.id }}" title="Save">
@@ -642,13 +664,16 @@
                     </div>
                     <div class="flex-grow-1">
                         {% if medicine.quantity == 0 %}
-                            <span class="status-badge out-stock"><i class="fas fa-times-circle"></i>Out of Stock</span>
-                        {% elif medicine.is_low_stock %}
-                            <span class="status-badge low-stock"><i class="fas fa-exclamation-triangle"></i>Low Stock</span>
+                            <span class="status-badge out-stock">Out of Stock</span>
+
                         {% elif medicine.is_expired %}
-                            <span class="status-badge expired"><i class="fas fa-calendar-times"></i>Expired</span>
+                            <span class="status-badge expired">Expired</span>
+
+                        {% elif medicine.is_low_stock %}
+                            <span class="status-badge low-stock">Low Stock</span>
+
                         {% else %}
-                            <span class="status-badge in-stock"><i class="fas fa-check-circle"></i>In Stock</span>
+                            <span class="status-badge in-stock">In Stock</span>
                         {% endif %}
                         {% if medicine.is_expired %}
                         <div class="expired-warning mt-1"><i class="fas fa-exclamation-circle"></i>Expired on {{ medicine.expiry_date }}</div>
@@ -692,6 +717,9 @@
                     <div class="col-6">
                         <label class="form-label-custom">Quantity</label>
                         <input type="number" class="form-control form-control-sm" value="{{ medicine.quantity }}" data-field="quantity" data-id="{{ medicine.id }}">
+                        <input type="hidden"
+       value="{{ medicine.low_stock_threshold }}"
+       data-field="low_stock_threshold">
                     </div>
                     <div class="col-12">
                         <label class="form-label-custom">Expiry Date</label>
@@ -786,7 +814,12 @@ document.addEventListener('DOMContentLoaded', function() {
             setLoading(btn, false);
             if (d.status === 'success') {
                 showToast(d.message, 'success');
-                if (d.medicine?.quantity !== undefined) updateStatus(id, parseInt(d.medicine.quantity));
+
+                const qtyInput = container.querySelector('[data-field="quantity"]');
+                const qty = parseInt(qtyInput.value || 0);
+
+                updateStatus(id, qty);
+
             } else {
                 showToast(d.message || 'Save failed.', 'error');
             }
@@ -823,23 +856,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Status badge updater
     function updateStatus(id, qty) {
-        let cls, text;
-        if (qty > 10)       { cls = 'in-stock';  text = '<i class="fas fa-check-circle"></i>In Stock'; }
-        else if (qty > 0)   { cls = 'low-stock'; text = '<i class="fas fa-exclamation-triangle"></i>Low Stock'; }
-        else                { cls = 'out-stock'; text = '<i class="fas fa-times-circle"></i>Out of Stock'; }
 
-        const row = document.getElementById(`medicine-${id}`);
-        if (row) {
-            const cell = row.querySelector('td:nth-child(9)');
-            if (cell) cell.innerHTML = `<span class="status-badge ${cls}">${text}</span>`;
-        }
-        const card = document.getElementById(`mobile-medicine-${id}`);
-        if (card) {
-            const badge = card.querySelector('.status-badge');
-            if (badge) { badge.className = `status-badge ${cls}`; badge.innerHTML = text; }
+    const row = document.getElementById(`medicine-${id}`);
+    if (!row) return;
+
+    const expiryInput = row.querySelector('[data-field="expiry_date"]');
+    const thresholdInput = row.querySelector('[data-field="low_stock_threshold"]');
+
+    const threshold = parseInt(thresholdInput?.value || 10);
+    const expiryValue = expiryInput?.value;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    let isExpired = false;
+
+    if (expiryValue) {
+        const expiryDate = new Date(expiryValue);
+        expiryDate.setHours(0,0,0,0);
+
+        if (expiryDate < today) {
+            isExpired = true;
         }
     }
 
+    let badges = [];
+
+    // OUT OF STOCK
+    if (qty === 0) {
+        badges.push('<span class="status-badge out-stock"><i class="fas fa-times-circle"></i>Out of Stock</span>');
+    }
+
+    // LOW STOCK
+    if (qty > 0 && qty <= threshold) {
+        badges.push('<span class="status-badge low-stock"><i class="fas fa-exclamation-triangle"></i>Low Stock</span>');
+    }
+
+    // EXPIRED
+    if (isExpired) {
+        badges.push('<span class="status-badge expired"><i class="fas fa-calendar-times"></i>Expired</span>');
+    }
+
+    // IN STOCK (only if not expired and not low)
+    if (qty > threshold && !isExpired) {
+        badges.push('<span class="status-badge in-stock"><i class="fas fa-check-circle"></i>In Stock</span>');
+    }
+
+    const cell = row.querySelector('td:nth-child(9)');
+    if (cell) {
+        cell.innerHTML = badges.join(" ");
+    }
+}
     function getCsrf() {
         const m = document.cookie.match(/csrftoken=([^;]+)/);
         return m ? decodeURIComponent(m[1]) : '';
@@ -847,7 +914,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('.save-btn').forEach(b => b.addEventListener('click', () => handleSave(b)));
     document.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', () => handleDelete(b)));
-
+    
+    // 🔹 Update status automatically when quantity changes
+    document.querySelectorAll('[data-field="quantity"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const id = this.dataset.id;
+            updateStatus(id, parseInt(this.value || 0));
+        });
+    });
+    document.querySelectorAll('[data-field="quantity"]').forEach(input => {
+    const id = input.dataset.id;
+    updateStatus(id, parseInt(input.value || 0));
+});
     // Bootstrap tooltips
     document.querySelectorAll('[title]').forEach(el => new bootstrap.Tooltip(el));
 });
