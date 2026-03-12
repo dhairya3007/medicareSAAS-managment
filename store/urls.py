@@ -31,4 +31,5 @@ urlpatterns = [
     path("switch-org/<int:org_id>/", views.switch_organization, name="switch_org"),
     path('invoice/<int:order_id>/', views.generate_invoice, name='generate_invoice'),
     path("invoice/<int:order_id>/preview/", views.invoice_preview, name="invoice_preview"),
+    path("network-search/", views.network_medicine_search, name="network_search"),
 ]

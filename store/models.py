@@ -63,45 +63,44 @@ class Supplier(models.Model):
         return self.name
 
 class Medicine(models.Model):
-    organization = models.ForeignKey(   # 👈 ADD THIS
+    organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
         null=True,
         blank=True
     )
+
     name = models.CharField(max_length=200)
-    components = models.TextField()
+    components = models.TextField(blank=True)
     product_number = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField()
     company_name = models.CharField(max_length=200)
     power = models.CharField(max_length=50)
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
-    image = models.ImageField(upload_to='medicines/')
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+
+    image = models.ImageField(
+        upload_to='medicines/',
+        blank=True,
+        null=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    # New fields
+
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+
     batch_number = models.CharField(max_length=100, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
+
     low_stock_threshold = models.PositiveIntegerField(default=10)
-    
+
     class Meta:
-     unique_together = ('organization', 'product_number')
-
-    def is_low_stock(self):
-        if self.quantity is None:
-            return False
-        return self.quantity <= self.low_stock_threshold
-
-    
-    def is_expired(self):
-        if not self.expiry_date:
-            return False
-        return self.expiry_date < timezone.now().date()
-
-    def __str__(self):
-        return f"{self.name} - {self.company_name}"
+        unique_together = ('organization', 'product_number')
 
 class Order(models.Model):
     organization = models.ForeignKey(   # 👈 ADD THIS
