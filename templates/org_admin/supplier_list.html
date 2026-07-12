@@ -201,7 +201,12 @@
                 <tbody>
                 {% for supplier in suppliers %}
                     <tr>
-                        <td>{{ supplier.name }}</td>
+                        <td>
+    <a href="{% url 'supplier_detail' supplier.id %}"
+       style="font-weight:600;color:var(--primary);text-decoration:none;">
+        {{ supplier.name }}
+    </a>
+</td>
                         <td>{{ supplier.contact_person|default:"—" }}</td>
                         <td>{{ supplier.phone|default:"—" }}</td>
                         <td>{{ supplier.email|default:"—" }}</td>
@@ -231,7 +236,12 @@
         <div class="d-lg-none p-3">
             {% for supplier in suppliers %}
             <div class="mobile-supplier-card">
-                <strong>{{ supplier.name }}</strong>
+                <strong>
+<a href="{% url 'supplier_detail' supplier.id %}"
+   style="color:var(--primary);text-decoration:none;">
+   {{ supplier.name }}
+</a>
+</strong>
 
                 <div class="supplier-meta">
                     Contact: {{ supplier.contact_person|default:"—" }}

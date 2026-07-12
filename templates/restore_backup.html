@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+/* 🔥 FORCE FULL WIDTH */
+.container, .content, .main-content {
+    max-width: 100% !important;
+}
+
+/* PAGE WRAPPER */
+.restore-page {
+    width: 100%;
+    max-width: 1300px;   /* wider than before */
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* GRID */
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* CARDS */
+.restore-card, .history-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* HEADINGS */
+.restore-card h2 {
+    margin-bottom: 0.5rem;
+}
+
+.restore-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* WARNING */
+.warning {
+    background: #fff5f5;
+    border-left: 4px solid #e74c3c;
+    padding: 12px;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+}
+
+/* FILE INPUT */
+.file-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: #f9fafb;
+}
+
+/* BUTTON */
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+table th {
+    background: #f9fafb;
+}
+
+table tr:hover {
+    background: #f9fafb;
+}
+
+/* EMPTY STATE */
+.empty {
+    text-align: center;
+    color: #888;
+    padding: 1rem;
+}
+</style>
+
+<div class="restore-page">
+
+    <div class="grid-layout">
+
+        <!-- 🔄 Restore -->
+        <div class="restore-card">
+            <h2>🔄 Restore Backup</h2>
+            <p>Upload a backup file to restore your system data.</p>
+
+            <div class="warning">
+                ⚠️ This will permanently delete current data and replace it with the backup.
+            </div>
+
+            <form method="POST" enctype="multipart/form-data"
+                  onsubmit="return confirm('This will overwrite all data. Continue?')">
+                {% csrf_token %}
+
+                <div class="file-input">
+                    <input type="file" name="backup_file" accept=".json" required>
+                </div>
+
+                <br>
+
+                <button type="submit" class="btn-danger">
+                    Upload & Restore
+                </button>
+            </form>
+        </div>
+
+        <!-- 📊 History -->
+        <div class="history-card">
+            <h3>📊 Restore History</h3>
+
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>File</th>
+                    <th>Status</th>
+                </tr>
+
+                {% for log in restore_logs %}
+                <tr>
+                    <td>{{ log.created_at|date:"d M Y, H:i" }}</td>
+                    <td>{{ log.user.username }}</td>
+                    <td>{{ log.file_name }}</td>
+                    <td>
+                        {% if log.status == "success" %}
+                            <span style="color:#16a34a; font-weight:600;">✔ Success</span>
+                        {% else %}
+                            <span style="color:#dc2626; font-weight:600;">✖ Failed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty">
+                        No restore history available
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -228,3 +228,237 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
+/* ============================================================
+   AI ASSISTANT
+============================================================ */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const aiButton = document.getElementById("ai-chat-button");
+
+    if (!aiButton) return;
+
+    const aiChatbox = document.getElementById("ai-chatbox");
+
+    const closeAI = document.getElementById("close-ai-chat");
+
+    const sendBtn = document.getElementById("send-ai-btn");
+
+    const input = document.getElementById("ai-input");
+
+    const messages = document.getElementById("ai-messages");
+
+
+    /* ============================================================
+       OPEN CHAT
+    ============================================================ */
+
+    aiButton.addEventListener("click", function () {
+
+        aiChatbox.style.display = "flex";
+    });
+
+
+    /* ============================================================
+       CLOSE CHAT
+    ============================================================ */
+
+    closeAI.addEventListener("click", function () {
+
+        aiChatbox.style.display = "none";
+    });
+
+
+    /* ============================================================
+       SEND MESSAGE
+    ============================================================ */
+
+    async function sendAIMessage() {
+
+        const message = input.value.trim();
+
+        if (!message) return;
+
+
+        /* USER MESSAGE */
+
+        messages.innerHTML += `
+            <div class="ai-message user-message">
+                ${message}
+            </div>
+        `;
+
+        input.value = "";
+
+        messages.scrollTop = messages.scrollHeight;
+
+
+        /* ============================================================
+           AI LOADING
+        ============================================================ */
+
+        messages.innerHTML += `
+            <div class="ai-message" id="ai-loading">
+
+                <div class="ai-loading-wrapper">
+
+                    <span class="ai-loading-dot"></span>
+                    <span class="ai-loading-dot"></span>
+                    <span class="ai-loading-dot"></span>
+
+                    <span class="ai-loading-text">
+                        AI is analyzing pharmacy data...
+                    </span>
+
+                </div>
+
+            </div>
+        `;
+
+        messages.scrollTop = messages.scrollHeight;
+
+
+        try {
+
+            const response = await fetch("/api/ai-assistant/", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+
+            const data = await response.json();
+
+
+            /* REMOVE LOADING */
+
+            const loading = document.getElementById("ai-loading");
+
+            if (loading) {
+
+                loading.remove();
+            }
+
+
+            /* ACCESS DENIED */
+
+            if (data.access_denied) {
+
+                messages.innerHTML += `
+                    <div class="ai-message" style="
+                        background: #fef2f2;
+                        border: 1px solid #fecaca;
+                        color: #dc2626;
+                    ">
+                        ${data.reply.replace(/\n/g, "<br>")}
+                    </div>
+                `;
+
+                messages.scrollTop = messages.scrollHeight;
+
+                return;
+            }
+
+
+            /* AI RESPONSE */
+
+            messages.innerHTML += `
+                <div class="ai-message">
+                    ${data.reply.replace(/\n/g, "<br>")}
+                </div>
+            `;
+
+            messages.scrollTop = messages.scrollHeight;
+
+        } catch (error) {
+
+            /* REMOVE LOADING */
+
+            const loading = document.getElementById("ai-loading");
+
+            if (loading) {
+
+                loading.remove();
+            }
+
+
+            /* ERROR MESSAGE */
+
+            messages.innerHTML += `
+                <div class="ai-message" style="
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #dc2626;
+                ">
+                    ⚠ SYSTEM ERROR<br><br>
+                    AI Assistant failed to respond.
+                </div>
+            `;
+
+            messages.scrollTop = messages.scrollHeight;
+        }
+    }
+
+
+    /* ============================================================
+       SEND BUTTON
+    ============================================================ */
+
+    sendBtn.addEventListener("click", function () {
+
+        sendAIMessage();
+    });
+
+
+    /* ============================================================
+       ENTER KEY SUPPORT
+    ============================================================ */
+
+    input.addEventListener("keypress", function (e) {
+
+        if (e.key === "Enter") {
+
+            sendAIMessage();
+        }
+    });
+
+
+    /* ============================================================
+       AI SUGGESTION BUTTONS
+    ============================================================ */
+
+    messages.addEventListener("click", function (e) {
+
+        if (e.target.classList.contains("ai-suggestion-btn")) {
+
+            input.value = e.target.innerText;
+
+            sendAIMessage();
+        }
+    });
+
+});
+
+
+/* ============================================================
+   CSRF TOKEN HELPER
+============================================================ */
+
+function getCSRFToken() {
+
+    const cookieValue = document.cookie
+        .split("; ")
+        .find(row => row.startsWith("csrftoken="));
+
+    return cookieValue
+        ? cookieValue.split("=")[1]
+        : "";
+}

@@ -75,10 +75,12 @@ class MedicineForm(forms.ModelForm):
         self.fields['supplier'].queryset = Supplier.objects.none()
 
         # ✅ Show only current user's organization data
-        if org:
-            self.fields['category'].queryset = Category.objects.filter(
-                organization=org
-            )
-            self.fields['supplier'].queryset = Supplier.objects.filter(
-                organization=org
-            )
+        if not org:
+            raise ValueError("Organization must be provided to MedicineForm")
+
+        self.fields['category'].queryset = Category.objects.filter(
+            organization=org
+        )
+        self.fields['supplier'].queryset = Supplier.objects.filter(
+            organization=org
+        )

@@ -145,3 +145,35 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.medicine.name} x {self.quantity}"
+class RestoreLog(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+    ]
+
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    file_name = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES
+    )
+
+    message = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.status} - {self.created_at}"

@@ -706,15 +706,15 @@ from django.utils import timezone
 from django.http import JsonResponse
 import json
 from .models import Medicine, Order, Category
-
+from datetime import timedelta
 @login_required
 def dashboard_view(request):
     current_time = timezone.now()
     org = get_user_organization(request)
 
-    Medicine.objects.filter(organization=org)
-    Order.objects.filter(organization=org)
-
+    filter_type = request.GET.get("filter", "recent")
+    month = request.GET.get("month")
+    year = request.GET.get("year")
 
     total_medicines = Medicine.objects.filter(
         organization=org
@@ -739,24 +739,36 @@ def dashboard_view(request):
         quantity=0
     ).count()
 
-    # ✅ CLEAN ORDER FILTERING
     total_revenue = Order.objects.filter(
         organization=org,
         is_completed=True
-    ).aggregate(
-        total=Sum('final_amount')
-    )['total'] or 0
+    ).aggregate(total=Sum('final_amount'))['total'] or 0
 
     total_orders = Order.objects.filter(
         organization=org,
         is_completed=True
     ).count()
 
-    recent_orders = Order.objects.filter(
+    # 🔹 Base Query
+    orders = Order.objects.filter(
         organization=org,
         is_completed=True
-    ).select_related('user').order_by('-order_date')[:5]
-    
+    ).select_related('user').order_by('-order_date')
+
+    # 🔹 Last Week Filter
+    if filter_type == "week":
+        last_week = current_time - timedelta(days=7)
+        orders = orders.filter(order_date__gte=last_week)
+
+    # 🔹 Monthly Filter
+    elif filter_type == "month" and month and year:
+        orders = orders.filter(
+            order_date__month=month,
+            order_date__year=year
+        )
+
+    recent_orders = orders[:10]
+
     context = {
         'current_time': current_time,
         'total_medicines': total_medicines,
@@ -768,6 +780,7 @@ def dashboard_view(request):
         'total_revenue': total_revenue,
         'total_orders': total_orders,
         'recent_orders': recent_orders,
+        'active_filter': filter_type
     }
 
     return render(request, 'dashboard.html', context)
@@ -1039,6 +1052,7 @@ def invoice_preview(request, order_id):
 from django.shortcuts import render
 from .models import Medicine, UserProfile
 
+
 @login_required
 @org_staff_required
 def network_medicine_search(request):
@@ -1061,9 +1075,8 @@ def network_medicine_search(request):
         for med in medicines:
 
             contact = UserProfile.objects.filter(
-                organization=med.organization,
-                role="pharmacist"
-            ).first()
+                organization=med.organization
+            ).exclude(phone="").first()
 
             results.append({
                 "medicine": med.name,
@@ -1074,3 +1087,940 @@ def network_medicine_search(request):
             })
 
     return render(request, "network_search.html", {"results": results})
+from django.db.models import Sum, F
+from datetime import datetime
+
+@org_staff_required
+def supplier_detail(request, supplier_id):
+
+    org = get_user_organization(request)
+
+    supplier = get_object_or_404(
+        Supplier,
+        id=supplier_id,
+        organization=org
+    )
+
+    medicines = Medicine.objects.filter(
+        organization=org,
+        supplier=supplier
+    ).order_by("-created_at")
+
+    # GET filters
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    month = request.GET.get("month")
+
+    if start_date:
+        medicines = medicines.filter(
+            created_at__date__gte=start_date
+        )
+
+    if end_date:
+        medicines = medicines.filter(
+            created_at__date__lte=end_date
+        )
+
+    if month:
+        medicines = medicines.filter(
+            created_at__month=month
+        )
+
+    total_quantity = medicines.aggregate(
+        total=Sum("quantity")
+    )["total"] or 0
+
+    total_value = medicines.aggregate(
+        total=Sum(F("quantity") * F("price"))
+    )["total"] or 0
+
+    context = {
+        "supplier": supplier,
+        "medicines": medicines,
+        "total_quantity": total_quantity,
+        "total_value": total_value,
+        "start_date": start_date,
+        "end_date": end_date,
+        "month": month
+    }
+
+    return render(request, "org_admin/supplier_detail.html", context)
+@org_staff_required
+def add_supplier_purchase(request, supplier_id):
+
+    org = get_user_organization(request)
+
+    supplier = get_object_or_404(
+        Supplier,
+        id=supplier_id,
+        organization=org
+    )
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+        company = request.POST.get("company_name")
+        power = request.POST.get("power")
+        quantity = request.POST.get("quantity")
+        price = request.POST.get("price")
+        expiry = request.POST.get("expiry_date")
+
+        Medicine.objects.create(
+            organization=org,
+            supplier=supplier,
+            name=name,
+            company_name=company,
+            power=power,
+            quantity=quantity,
+            price=price,
+            expiry_date=expiry
+        )
+
+        return redirect("supplier_detail", supplier_id=supplier.id)
+
+    return render(
+        request,
+        "org_admin/add_supplier_purchase.html",
+        {"supplier": supplier}
+    )
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.db.models import Sum
+from datetime import timedelta, datetime
+
+@login_required
+def download_sales_report(request):
+    org = get_user_organization(request)
+
+    # 📅 GET FILTERS
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    months = request.GET.get("months")
+
+    orders = Order.objects.filter(
+        organization=org,
+        is_completed=True
+    )
+
+    # 🔹 OPTION 1: Custom Date Range
+    if start_date and end_date:
+        orders = orders.filter(
+            order_date__date__range=[start_date, end_date]
+        )
+
+    # 🔹 OPTION 2: Last X Months
+    elif months:
+        months = int(months)
+        end = timezone.now()
+        start = end - timedelta(days=30 * months)
+
+        orders = orders.filter(order_date__range=[start, end])
+
+        start_date = start.date()
+        end_date = end.date()
+
+    # 🔹 DEFAULT: Last 30 days
+    else:
+        end = timezone.now()
+        start = end - timedelta(days=30)
+
+        orders = orders.filter(order_date__range=[start, end])
+
+        start_date = start.date()
+        end_date = end.date()
+
+    # 💰 TOTAL
+    total_revenue = orders.aggregate(total=Sum('final_amount'))['total'] or 0
+
+    # 🧾 HTML
+    html = render_to_string("report_pdf.html", {
+        "orders": orders,
+        "total_revenue": total_revenue,
+        "start_date": start_date,
+        "end_date": end_date,
+        "generated_at": timezone.now()
+    })
+
+    pdf = HTML(string=html).write_pdf()
+
+    # 📄 FILE NAME BASED ON DATE
+    filename = f"{start_date}_to_{end_date}_report.pdf"
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
+from django.core import serializers
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def backup_data(request):
+    org = get_user_organization(request)
+
+    medicines = Medicine.objects.filter(organization=org)
+    orders = Order.objects.filter(organization=org)
+    order_items = OrderItem.objects.filter(organization=org)
+    categories = Category.objects.filter(organization=org)
+    suppliers = Supplier.objects.filter(organization=org)
+
+    # Combine all data
+    all_data = (
+        list(medicines) +
+        list(orders) +
+        list(order_items) +
+        list(categories) +
+        list(suppliers)
+    )
+
+    data = serializers.serialize('json', all_data)
+
+    response = HttpResponse(data, content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename="full_backup.json"'
+    return response
+from django.core import serializers
+from django.db import transaction
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+
+from .models import RestoreLog, Medicine, Order, OrderItem, Category, Supplier
+from .utils import get_user_organization
+
+
+@login_required
+def restore_backup(request):
+    org = get_user_organization(request)
+
+    # 📊 Get last 10 logs for UI table
+    restore_logs = RestoreLog.objects.filter(
+        organization=org
+    ).order_by('-created_at')[:10]
+
+    if request.method == 'POST':
+        file = request.FILES.get('backup_file')
+
+        if not file:
+            messages.error(request, "No file uploaded")
+            return redirect('restore_backup')
+
+        try:
+            data = file.read().decode('utf-8')
+            objects = serializers.deserialize('json', data)
+
+            # 🔒 SAFE TRANSACTION
+            with transaction.atomic():
+
+                # 🧹 DELETE OLD DATA
+                Medicine.objects.filter(organization=org).delete()
+                Order.objects.filter(organization=org).delete()
+                OrderItem.objects.filter(organization=org).delete()
+                Category.objects.filter(organization=org).delete()
+                Supplier.objects.filter(organization=org).delete()
+
+                # 📥 RESTORE DATA
+                for obj in objects:
+                    obj.save()
+
+            # ✅ SUCCESS LOG
+            RestoreLog.objects.create(
+                organization=org,
+                user=request.user,
+                file_name=file.name,
+                status='success',
+                message='Backup restored successfully'
+            )
+
+            messages.success(request, "✅ Backup restored successfully!")
+
+        except Exception as e:
+
+            # ❌ FAILURE LOG
+            RestoreLog.objects.create(
+                organization=org,
+                user=request.user,
+                file_name=file.name if file else '',
+                status='failed',
+                message=str(e)
+            )
+
+            messages.error(request, f"❌ Restore failed: {str(e)}")
+
+        return redirect('restore_backup')
+
+    return render(request, 'restore_backup.html', {
+        'restore_logs': restore_logs
+    })
+@login_required
+def report_page(request):
+    return render(request, "report_filter.html")
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.utils import timezone
+from django.db.models import Count
+from django.db.models import F
+from django.utils.timezone import now
+from datetime import timedelta
+import json
+
+
+@login_required
+@require_POST
+def ai_assistant(request):
+
+    try:
+
+        org = get_user_organization(request)
+
+        # =====================================================
+        # ORGANIZATION VALIDATION
+        # =====================================================
+
+        if not org:
+
+            return JsonResponse({
+
+                "reply": (
+                    "🚫 ORGANIZATION ERROR\n\n"
+                    "No organization is linked to your account."
+                ),
+
+                "access_denied": True
+
+            }, status=403)
+
+
+        # =====================================================
+        # FEATURE ACCESS CONTROL
+        # =====================================================
+
+        if not org.ai_assistant_enabled:
+
+            return JsonResponse({
+
+                "reply": (
+                    "🚫 ACCESS RESTRICTED\n\n"
+
+                    "Your organization does not currently "
+                    "have access to the AI Assistant feature.\n\n"
+
+                    "Please contact the administrator "
+                    "to enable premium AI features."
+                ),
+
+                "access_denied": True
+
+            }, status=403)
+
+
+        # =====================================================
+        # REQUEST DATA
+        # =====================================================
+
+        data = json.loads(request.body)
+
+        message = data.get("message", "").lower().strip()
+
+
+        # =====================================================
+        # LOW STOCK
+        # =====================================================
+
+        if any(keyword in message for keyword in [
+
+            "low stock",
+            "stock issue",
+            "stock alert",
+            "less stock"
+
+        ]):
+
+            medicines = Medicine.objects.filter(
+                organization=org,
+                quantity__lte=10
+            )
+
+
+            if medicines.exists():
+
+                return JsonResponse({
+
+                    "reply": (
+                        "⚠ LOW STOCK ALERT\n\n"
+
+                        "Medicines:\n• "
+
+                        + "\n• ".join(
+                            [m.name for m in medicines[:5]]
+                        )
+
+                        + f"\n\nTotal affected medicines: "
+                          f"{medicines.count()}\n\n"
+
+                        "Recommendation:\n"
+                        "• Restock medicines soon\n"
+                        "• Monitor fast-moving inventory"
+                    )
+
+                })
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "✅ INVENTORY STATUS\n\n"
+                    "No low stock medicines found."
+                )
+
+            })
+
+
+        # =====================================================
+        # EXPIRED MEDICINES
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "expired",
+            "expiry",
+            "expired medicines",
+            "expired meds"
+
+        ]):
+
+            medicines = Medicine.objects.filter(
+                organization=org,
+                expiry_date__lt=timezone.now().date()
+            )
+
+
+            if medicines.exists():
+
+                return JsonResponse({
+
+                    "reply": (
+                        "❌ EXPIRED MEDICINES\n\n"
+
+                        "Medicines:\n• "
+
+                        + "\n• ".join(
+                            [m.name for m in medicines[:5]]
+                        )
+
+                        + f"\n\nTotal expired medicines: "
+                          f"{medicines.count()}\n\n"
+
+                        "Recommendation:\n"
+                        "• Remove expired stock\n"
+                        "• Verify inventory batches"
+                    )
+
+                })
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "✅ EXPIRY STATUS\n\n"
+                    "No expired medicines found."
+                )
+
+            })
+
+
+        # =====================================================
+        # REVENUE ANALYTICS
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "revenue",
+            "sales",
+            "income",
+            "earnings"
+
+        ]):
+
+            revenue = Order.objects.filter(
+                organization=org,
+                is_completed=True
+            ).aggregate(
+                total=Sum("final_amount")
+            )["total"] or 0
+
+
+            total_orders = Order.objects.filter(
+                organization=org,
+                is_completed=True
+            ).count()
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "💰 REVENUE ANALYTICS\n\n"
+
+                    f"Total Revenue: ₹{revenue}\n"
+
+                    f"Completed Orders: {total_orders}\n\n"
+
+                    "Business Status:\n"
+                    "• Sales tracking active\n"
+                    "• Revenue analytics operational"
+                )
+
+            })
+
+
+        # =====================================================
+        # INVENTORY INSIGHTS
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "inventory insights",
+            "inventory summary",
+            "summary",
+            "insights",
+            "attention",
+            "inventory"
+
+        ]):
+
+            low_stock = Medicine.objects.filter(
+                organization=org,
+                quantity__lte=10
+            ).count()
+
+            expired = Medicine.objects.filter(
+                organization=org,
+                expiry_date__lt=timezone.now().date()
+            ).count()
+
+            total_products = Medicine.objects.filter(
+                organization=org
+            ).count()
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "📊 INVENTORY INSIGHTS\n\n"
+
+                    f"📦 Total Medicines: "
+                    f"{total_products}\n"
+
+                    f"⚠ Low Stock Medicines: "
+                    f"{low_stock}\n"
+
+                    f"❌ Expired Medicines: "
+                    f"{expired}\n\n"
+
+                    "Recommendations:\n"
+
+                    "• Review low stock inventory\n"
+                    "• Remove expired medicines\n"
+                    "• Monitor inventory regularly\n"
+                    "• Maintain supplier coordination"
+                )
+
+            })
+
+
+        # =====================================================
+        # ORDER ANALYTICS
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "orders",
+            "completed orders",
+            "sales orders"
+
+        ]):
+
+            total_orders = Order.objects.filter(
+                organization=org,
+                is_completed=True
+            ).count()
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "📦 ORDER ANALYTICS\n\n"
+
+                    f"Completed Orders: "
+                    f"{total_orders}\n\n"
+
+                    "Order System Status:\n"
+                    "• Order tracking active\n"
+                    "• Sales workflow operational"
+                )
+
+            })
+
+        # =====================================================
+        # TOP SELLING MEDICINES
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "top selling",
+            "best selling",
+            "top medicines",
+            "top selling medicines"
+
+        ]):
+
+            top_medicines = (
+                OrderItem.objects.filter(
+                    order__organization=org
+                )
+                .values("medicine__name")
+                .annotate(
+                    total_sold=Sum("quantity")
+                )
+                .order_by("-total_sold")[:5]
+            )
+
+            if top_medicines:
+
+                response = (
+                    "🏆 TOP SELLING MEDICINES\n\n"
+                )
+
+                for idx, item in enumerate(top_medicines, start=1):
+
+                    response += (
+                        f"{idx}. "
+                        f"{item['medicine__name']} "
+                        f"→ {item['total_sold']} units sold\n"
+                    )
+
+                response += (
+                    "\nInsights:\n"
+                    "• High demand medicines detected\n"
+                    "• Maintain sufficient inventory"
+                )
+
+                return JsonResponse({
+                    "reply": response
+                })
+
+            return JsonResponse({
+                "reply": "No sales data found."
+            })
+
+        # =====================================================
+        # MONTHLY SALES ANALYSIS
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "monthly sales",
+            "monthly analysis",
+            "sales analysis",
+            "monthly report"
+
+        ]):
+
+            start_date = now() - timedelta(days=30)
+
+            monthly_orders = Order.objects.filter(
+                organization=org,
+                created_at__gte=start_date,
+                is_completed=True
+            )
+
+            total_revenue = monthly_orders.aggregate(
+                total=Sum("final_amount")
+            )["total"] or 0
+
+            total_orders = monthly_orders.count()
+
+            total_items = OrderItem.objects.filter(
+                order__in=monthly_orders
+            ).aggregate(
+                total=Sum("quantity")
+            )["total"] or 0
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "📊 MONTHLY SALES ANALYSIS\n\n"
+
+                    f"💰 Revenue: ₹{total_revenue}\n"
+
+                    f"📦 Orders: {total_orders}\n"
+
+                    f"💊 Medicines Sold: {total_items}\n\n"
+
+                    "Business Insights:\n"
+                    "• Monthly sales analytics active\n"
+                    "• Inventory movement monitored"
+                )
+
+            })
+        
+        # =====================================================
+        # ORDER DETAILS
+        # =====================================================
+
+        elif "order" in message and any(
+            char.isdigit() for char in message
+        ):
+
+            order_number = ''.join(
+                filter(str.isdigit, message)
+            )
+
+            order = Order.objects.filter(
+                organization=org,
+                id=order_number
+            ).first()
+
+            if not order:
+
+                return JsonResponse({
+                    "reply": (
+                        "❌ ORDER NOT FOUND\n\n"
+                        f"No order found with ID #{order_number}"
+                    )
+                })
+
+            items = OrderItem.objects.filter(
+                order=order
+            )
+
+            response = (
+                "📦 ORDER DETAILS\n\n"
+
+                f"Order ID: #{order.id}\n"
+
+                f"Total Amount: ₹{order.final_amount}\n"
+
+                f"Status: "
+                f"{'Completed' if order.is_completed else 'Pending'}\n\n"
+
+                "Medicines:\n"
+            )
+
+            for item in items:
+
+                response += (
+                    f"• {item.medicine.name} "
+                    f"× {item.quantity}\n"
+                )
+
+            return JsonResponse({
+                "reply": response
+            })
+        
+        # =====================================================
+        # STOCK DISTRIBUTION
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "stock distribution",
+            "stock analysis",
+            "inventory distribution"
+
+        ]):
+
+            high_stock = Medicine.objects.filter(
+                organization=org,
+                quantity__gt=50
+            ).count()
+
+            medium_stock = Medicine.objects.filter(
+                organization=org,
+                quantity__gt=10,
+                quantity__lte=50
+            ).count()
+
+            low_stock = Medicine.objects.filter(
+                organization=org,
+                quantity__lte=10
+            ).count()
+
+            out_of_stock = Medicine.objects.filter(
+                organization=org,
+                quantity=0
+            ).count()
+
+
+            return JsonResponse({
+
+                "reply": (
+                    "📦 STOCK DISTRIBUTION\n\n"
+
+                    f"🟢 High Stock: {high_stock}\n"
+
+                    f"🟡 Medium Stock: {medium_stock}\n"
+
+                    f"⚠ Low Stock: {low_stock}\n"
+
+                    f"🔴 Out of Stock: {out_of_stock}\n\n"
+
+                    "Insights:\n"
+                    "• Inventory distribution analyzed\n"
+                    "• Restock low inventory items"
+                )
+
+            })
+        
+        # =====================================================
+        # FAST MOVING INVENTORY
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "fast moving",
+            "fast selling",
+            "moving inventory"
+
+        ]):
+
+            fast_items = (
+                OrderItem.objects.filter(
+                    order__organization=org
+                )
+                .values("medicine__name")
+                .annotate(
+                    total_sold=Sum("quantity")
+                )
+                .order_by("-total_sold")[:5]
+            )
+
+            response = (
+                "🚀 FAST MOVING INVENTORY\n\n"
+            )
+
+            for idx, item in enumerate(fast_items, start=1):
+
+                response += (
+                    f"{idx}. "
+                    f"{item['medicine__name']} "
+                    f"→ {item['total_sold']} sold\n"
+                )
+
+            response += (
+                "\nRecommendations:\n"
+                "• Increase stock availability\n"
+                "• Coordinate with suppliers"
+            )
+
+            return JsonResponse({
+                "reply": response
+            })
+        # =====================================================
+        # SLOW MOVING INVENTORY
+        # =====================================================
+
+        elif any(keyword in message for keyword in [
+
+            "slow moving",
+            "slow selling",
+            "less selling"
+
+        ]):
+
+            slow_items = (
+                OrderItem.objects.filter(
+                    order__organization=org
+                )
+                .values("medicine__name")
+                .annotate(
+                    total_sold=Sum("quantity")
+                )
+                .order_by("total_sold")[:5]
+            )
+
+            response = (
+                "🐢 SLOW MOVING INVENTORY\n\n"
+            )
+
+            for idx, item in enumerate(slow_items, start=1):
+
+                response += (
+                    f"{idx}. "
+                    f"{item['medicine__name']} "
+                    f"→ {item['total_sold']} sold\n"
+                )
+
+            response += (
+                "\nRecommendations:\n"
+                "• Consider promotional offers\n"
+                "• Reduce overstock inventory"
+            )
+
+            return JsonResponse({
+                "reply": response
+            })
+        
+
+        # =====================================================
+        # DEFAULT RESPONSE
+        # =====================================================
+
+        return JsonResponse({
+
+            "reply": (
+
+                "🤖 AI PHARMACY INTELLIGENCE ASSISTANT\n\n"
+
+                "I can help you with:\n\n"
+
+                "📦 Inventory Management\n"
+                "• Low stock medicines\n"
+                "• Expired medicines\n"
+                "• Stock distribution\n"
+                "• Inventory insights\n\n"
+
+                "💰 Business Analytics\n"
+                "• Revenue analytics\n"
+                "• Monthly sales analysis\n"
+                "• Order analytics\n"
+                "• Top selling medicines\n\n"
+
+                "🚀 Inventory Intelligence\n"
+                "• Fast moving inventory\n"
+                "• Slow moving inventory\n"
+                "• Best selling medicines\n\n"
+
+                "📋 Order Management\n"
+                "• Order details by order number\n\n"
+
+                "Example Questions:\n\n"
+
+                "• Show low stock medicines\n"
+                "• Give inventory insights\n"
+                "• Show revenue analytics\n"
+                "• Top selling medicines\n"
+                "• Monthly sales analysis\n"
+                "• Stock distribution\n"
+                "• Fast moving inventory\n"
+                "• Show order 1023"
+            )
+
+        })
+
+
+    except Exception as e:
+
+        return JsonResponse({
+
+            "reply": (
+                "⚠ SYSTEM ERROR\n\n"
+                f"{str(e)}"
+            )
+
+        }, status=500)

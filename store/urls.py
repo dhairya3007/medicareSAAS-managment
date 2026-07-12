@@ -32,4 +32,13 @@ urlpatterns = [
     path('invoice/<int:order_id>/', views.generate_invoice, name='generate_invoice'),
     path("invoice/<int:order_id>/preview/", views.invoice_preview, name="invoice_preview"),
     path("network-search/", views.network_medicine_search, name="network_search"),
+    path('report/download/', views.download_sales_report, name='download_report'),
+    path('backup/', views.backup_data, name='backup_data'),
+    path('backup/restore/', views.restore_backup, name='restore_backup'),
+    path('report/', views.report_page, name='report_page'),
+    path(
+    'api/ai-assistant/',
+    views.ai_assistant,
+    name='ai_assistant'
+),
 ]

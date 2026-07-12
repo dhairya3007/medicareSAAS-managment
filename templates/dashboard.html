@@ -417,11 +417,31 @@
         <div class="col-lg-6">
             <div class="panel">
                 <div class="panel-head">
-                    <div class="panel-head-left">
-                        <i class="fas fa-shopping-bag" style="color:var(--primary);font-size:0.85rem;"></i>
-                        <h5 class="panel-title">Recent Orders</h5>
-                    </div>
-                </div>
+    <div class="panel-head-left">
+        <i class="fas fa-shopping-bag" style="color:var(--primary);font-size:0.85rem;"></i>
+        <h5 class="panel-title">Recent Orders</h5>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+
+        <!-- Recent -->
+        <a href="?filter=recent"
+           class="btn-alert-action warning-btn">
+            Recent
+        </a>
+
+        <!-- Last Week -->
+        <a href="?filter=week"
+           class="btn-alert-action danger-btn">
+            Last Week
+        </a>
+
+        <!-- Month Selector -->
+        <input type="month"
+               onchange="filterByMonth(this.value)"
+               style="font-size:12px;padding:3px;border:1px solid var(--border-color);border-radius:4px;">
+    </div>
+</div>
                 <div class="table-responsive">
                     <table class="orders-table">
                         <thead>
@@ -611,6 +631,18 @@ function startAutoRefresh() {
         refreshStockChart();
         refreshTopProductsChart();
     }, 30000);
+}
+function filterByMonth(value){
+
+    if(!value) return;
+
+    const parts = value.split("-");
+
+    const year = parts[0];
+    const month = parts[1];
+
+    window.location.href =
+        `?filter=month&month=${month}&year=${year}`;
 }
 </script>
 {% endblock %}
