@@ -106,6 +106,7 @@ class Order(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('cash', 'Cash / In-store'),
         ('card', 'Simulated Card Payment'),
+        ('qr', 'UPI QR Code Payment'),
     ]
 
     PAYMENT_STATUS_CHOICES = [

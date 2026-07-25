@@ -272,6 +272,10 @@
                                     <input type="radio" name="payment_method" value="card" onchange="togglePaymentFields()">
                                     <span>Simulated Card Payment</span>
                                 </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                                    <input type="radio" name="payment_method" value="qr" onchange="togglePaymentFields()">
+                                    <span>UPI QR Code Payment</span>
+                                </label>
                             </div>
                         </div>
 
@@ -302,6 +306,20 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- UPI QR Code Payment Fields (Hidden by default) -->
+                        <div id="qrFieldsSection" class="discount-wrap" style="display: none; background: var(--bg-subtle); text-align: center; padding: 1.5rem;">
+                            <div class="discount-label" style="justify-content: center; margin-bottom: 1rem;">
+                                <i class="fas fa-qrcode"></i>Scan to Pay
+                            </div>
+                            <div style="background: #fff; padding: 1rem; border-radius: var(--radius-md); display: inline-block; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+                                <img id="upi_qr_image" src="" alt="UPI QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
+                            </div>
+                            <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem; margin-bottom: 0.25rem;">
+                                Amount: <span id="qrBillAmount" style="color: var(--primary);">₹{{ total }}</span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Scan this QR code using any UPI app (GPAY, PhonePe, Paytm) to pay.</p>
                         </div>
 
                         <div class="summary-line">
@@ -370,18 +388,55 @@ function calculateDiscount() {
 
     document.getElementById('finalAmount').textContent = '₹' + finalAmt.toFixed(2);
     document.getElementById('finalAmountInput').value = finalAmt.toFixed(2);
+
+    updateQR();
+}
+
+function updateQR() {
+    const finalAmtEl = document.getElementById('finalAmount');
+    let amountStr = finalAmtEl ? finalAmtEl.textContent.replace('₹', '') : '{{ total }}';
+    let amount = parseFloat(amountStr) || 0;
+
+    // Update the text display
+    const qrAmountEl = document.getElementById('qrBillAmount');
+    if (qrAmountEl) {
+        qrAmountEl.textContent = '₹' + amount.toFixed(2);
+    }
+
+    // Construct the UPI URI
+    const upiUri = `upi://pay?pa=medicare@upi&pn=MediCare&am=${amount.toFixed(2)}&cu=INR`;
+    // URL encode the URI
+    const encodedUri = encodeURIComponent(upiUri);
+    // Generate QR server URL
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUri}`;
+
+    const qrImg = document.getElementById('upi_qr_image');
+    if (qrImg) {
+        qrImg.src = qrUrl;
+    }
 }
 
 function togglePaymentFields() {
     const cardSection = document.getElementById('cardFieldsSection');
+    const qrSection = document.getElementById('qrFieldsSection');
     const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
     if (paymentMethod === 'card') {
         cardSection.style.display = 'block';
+        qrSection.style.display = 'none';
         document.getElementById('card_number').required = true;
         document.getElementById('card_expiry').required = true;
         document.getElementById('card_cvv').required = true;
+    } else if (paymentMethod === 'qr') {
+        cardSection.style.display = 'none';
+        qrSection.style.display = 'block';
+        document.getElementById('card_number').required = false;
+        document.getElementById('card_expiry').required = false;
+        document.getElementById('card_cvv').required = false;
+        updateQR();
     } else {
         cardSection.style.display = 'none';
+        qrSection.style.display = 'none';
         document.getElementById('card_number').required = false;
         document.getElementById('card_expiry').required = false;
         document.getElementById('card_cvv').required = false;

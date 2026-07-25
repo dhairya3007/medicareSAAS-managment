@@ -119,6 +119,31 @@ class PaymentIntegrationTests(TestCase):
         self.medicine.refresh_from_db()
         self.assertEqual(self.medicine.quantity, 100)
 
+    def test_checkout_qr_payment_flow(self):
+        # 1. Add medicine to cart
+        add_cart_url = reverse('add_to_cart', args=[self.medicine.id])
+        self.client.post(add_cart_url)
+
+        # 2. Post checkout form with QR payment method
+        checkout_url = reverse('checkout')
+        response = self.client.post(checkout_url, {
+            'payment_method': 'qr'
+        })
+
+        # Verify redirect to order success
+        orders = Order.objects.filter(user=self.user)
+        self.assertEqual(orders.count(), 1)
+        order = orders.first()
+        self.assertRedirects(response, reverse('order_success', args=[order.id]))
+
+        # Verify order attributes
+        self.assertEqual(order.payment_method, 'qr')
+        self.assertEqual(order.payment_status, 'paid')
+
+        # Verify inventory is reduced
+        self.medicine.refresh_from_db()
+        self.assertEqual(self.medicine.quantity, 99)
+
     def test_checkout_card_payment_flow_invalid_cvv(self):
         # 1. Add medicine to cart
         add_cart_url = reverse('add_to_cart', args=[self.medicine.id])
