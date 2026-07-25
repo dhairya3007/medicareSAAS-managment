@@ -258,6 +258,52 @@
                         </div>
                         {% endif %}
 
+                        <!-- Payment Method Selection -->
+                        <div class="discount-wrap" style="background: #fff; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+                            <div class="discount-label">
+                                <i class="fas fa-wallet"></i>Payment Method
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                                    <input type="radio" name="payment_method" value="cash" checked onchange="togglePaymentFields()">
+                                    <span>Cash / In-store</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                                    <input type="radio" name="payment_method" value="card" onchange="togglePaymentFields()">
+                                    <span>Simulated Card Payment</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card Fields (Hidden by default) -->
+                        <div id="cardFieldsSection" class="discount-wrap" style="display: none; background: var(--bg-subtle);">
+                            <div class="discount-label">
+                                <i class="fas fa-credit-card"></i>Card Details
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div>
+                                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Card Number</label>
+                                    <div class="discount-input-row">
+                                        <input type="text" name="card_number" id="card_number" class="discount-input" placeholder="1234 5678 1234 5678" maxlength="19">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Expiry Date</label>
+                                        <div class="discount-input-row">
+                                            <input type="text" name="card_expiry" id="card_expiry" class="discount-input" placeholder="MM/YY" maxlength="5">
+                                        </div>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">CVV</label>
+                                        <div class="discount-input-row">
+                                            <input type="password" name="card_cvv" id="card_cvv" class="discount-input" placeholder="123" maxlength="3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="summary-line">
                             <span>Subtotal</span>
                             <span class="s-val">₹{{ total }}</span>
@@ -326,6 +372,25 @@ function calculateDiscount() {
     document.getElementById('finalAmountInput').value = finalAmt.toFixed(2);
 }
 
-document.addEventListener('DOMContentLoaded', calculateDiscount);
+function togglePaymentFields() {
+    const cardSection = document.getElementById('cardFieldsSection');
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    if (paymentMethod === 'card') {
+        cardSection.style.display = 'block';
+        document.getElementById('card_number').required = true;
+        document.getElementById('card_expiry').required = true;
+        document.getElementById('card_cvv').required = true;
+    } else {
+        cardSection.style.display = 'none';
+        document.getElementById('card_number').required = false;
+        document.getElementById('card_expiry').required = false;
+        document.getElementById('card_cvv').required = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    calculateDiscount();
+    togglePaymentFields();
+});
 </script>
 {% endblock %}

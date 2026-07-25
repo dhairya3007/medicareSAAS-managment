@@ -103,6 +103,17 @@ class Medicine(models.Model):
         unique_together = ('organization', 'product_number')
 
 class Order(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash / In-store'),
+        ('card', 'Simulated Card Payment'),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+    ]
+
     organization = models.ForeignKey(   # 👈 ADD THIS
         Organization,
         on_delete=models.CASCADE,
@@ -116,6 +127,17 @@ class Order(models.Model):
     final_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_completed = models.BooleanField(default=False)
     
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='cash'
+    )
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='pending'
+    )
+
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
 class OrderItem(models.Model):
