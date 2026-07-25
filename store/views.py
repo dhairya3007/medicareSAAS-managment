@@ -253,19 +253,38 @@ def checkout_view(request):
             discount_amount = total * (discount_percentage / Decimal('100'))
             final_amount = total - discount_amount
 
+        payment_method = request.POST.get('payment_method', 'cash')
+        payment_status = 'paid'
+
+        if payment_method == 'card':
+            card_number = request.POST.get('card_number', '').replace(' ', '').replace('-', '')
+            card_expiry = request.POST.get('card_expiry', '').strip()
+            card_cvv = request.POST.get('card_cvv', '').strip()
+
+            if len(card_number) != 16 or not card_number.isdigit():
+                messages.error(request, 'Payment Failed: Invalid 16-digit card number.')
+                return redirect('checkout')
+            if not card_expiry:
+                messages.error(request, 'Payment Failed: Expiry date is required.')
+                return redirect('checkout')
+            if len(card_cvv) != 3 or not card_cvv.isdigit():
+                messages.error(request, 'Payment Failed: Invalid 3-digit CVV.')
+                return redirect('checkout')
+
         try:
             with transaction.atomic():
                 # Create order
                 order = Order.objects.create(
-                    organization=org, # 👈 ADD THIS
-                user=request.user,
-                total_amount=total,
-                discount_percentage=discount_percentage,
-                final_amount=final_amount,
-                is_completed=True
-            )
+                    organization=org,
+                    user=request.user,
+                    total_amount=total,
+                    discount_percentage=discount_percentage,
+                    final_amount=final_amount,
+                    is_completed=True,
+                    payment_method=payment_method,
+                    payment_status=payment_status
+                )
 
-                
                 # Create order items and update medicine quantities
                 for item in cart_items:
                     OrderItem.objects.create(
@@ -286,11 +305,10 @@ def checkout_view(request):
                 messages.success(request, f'Order placed successfully! Total: ₹{final_amount:.2f}')
                 return redirect('order_success', order_id=order.id)
                 
-       # except Exception as e:
-            #messages.error(request, 'An error occurred during checkout. Please try again.')
         except Exception as e:
             print(e)
-            raise e
+            messages.error(request, 'An error occurred during checkout. Please try again.')
+            return redirect('checkout')
     return render(request, 'checkout.html', {
         'cart_items': cart_items,
         'total': total,
