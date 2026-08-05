@@ -30,5 +30,10 @@ class Organization(models.Model):
     # NEW FIELD
     address = models.TextField(blank=True)
 
+    # 🔥 AI FEATURES
+    ai_assistant_enabled = models.BooleanField(default=False)
+
+    dashboard_ai_enabled = models.BooleanField(default=False)
+    
     def __str__(self):
         return self.name

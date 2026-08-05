@@ -166,6 +166,28 @@
                 Manage Suppliers <i class="fas fa-arrow-right"></i>
             </a>
         </div>
+        <div class="dashboard-card">
+    <h4>Reports</h4>
+    <p>Generate and download sales reports.</p>
+    <a href="{% url 'report_page' %}">
+        Generate Report <i class="fas fa-file-pdf"></i>
+    </a>
+</div>
+
+<div class="dashboard-card">
+    <h4>Backup</h4>
+    <p>Download full system backup data.</p>
+    <a href="{% url 'backup_data' %}">
+        Backup Data <i class="fas fa-database"></i>
+    </a>
+</div>
+<div class="dashboard-card">
+    <h4>Restore Backup</h4>
+    <p>Upload backup file to restore data.</p>
+    <a href="{% url 'restore_backup' %}">
+        Restore Data
+    </a>
+</div>
 
     </div>
 

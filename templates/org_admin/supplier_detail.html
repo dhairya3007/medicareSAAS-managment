@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+
+.supplier-page{
+font-family:'DM Sans',sans-serif;
+padding-bottom:40px;
+}
+
+.page-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.page-title{
+font-family:'DM Serif Display',serif;
+font-size:28px;
+margin:0;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.page-title i{
+color:var(--primary);
+}
+
+.btn-back{
+padding:6px 14px;
+background:var(--primary-light);
+color:var(--primary);
+border-radius:6px;
+text-decoration:none;
+font-size:13px;
+font-weight:600;
+}
+
+.btn-back:hover{
+background:var(--primary);
+color:#fff;
+}
+
+.btn-add{
+padding:6px 14px;
+background:linear-gradient(135deg,#065f46,#059669);
+color:#fff;
+border-radius:6px;
+text-decoration:none;
+font-size:13px;
+font-weight:600;
+}
+
+.btn-add:hover{
+opacity:0.9;
+}
+
+/* Supplier info */
+
+.info-panel{
+background:#fff;
+border:1px solid var(--border-color);
+border-radius:10px;
+padding:20px;
+margin-bottom:20px;
+box-shadow:var(--shadow-sm);
+}
+
+.info-row{
+display:flex;
+flex-wrap:wrap;
+gap:20px;
+font-size:14px;
+color:var(--text-muted);
+}
+
+.info-row strong{
+color:var(--text-primary);
+}
+
+/* summary cards */
+
+.summary-row{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:16px;
+margin-bottom:20px;
+}
+
+.summary-card{
+background:#fff;
+border:1px solid var(--border-color);
+border-radius:10px;
+padding:16px;
+box-shadow:var(--shadow-sm);
+}
+
+.summary-title{
+font-size:12px;
+text-transform:uppercase;
+letter-spacing:1px;
+color:var(--text-muted);
+margin-bottom:4px;
+}
+
+.summary-value{
+font-size:22px;
+font-weight:700;
+color:var(--text-primary);
+}
+
+/* filter bar */
+
+.filter-bar{
+background:#fff;
+border:1px solid var(--border-color);
+border-radius:10px;
+padding:12px 16px;
+margin-bottom:16px;
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+align-items:center;
+}
+
+.filter-bar label{
+font-size:13px;
+color:var(--text-muted);
+}
+
+.filter-bar input{
+padding:5px 8px;
+border:1px solid var(--border-color);
+border-radius:6px;
+font-size:13px;
+}
+
+.btn-filter{
+background:var(--primary);
+color:#fff;
+border:none;
+padding:6px 12px;
+border-radius:6px;
+font-size:13px;
+cursor:pointer;
+}
+
+.btn-reset{
+background:var(--danger-light);
+color:var(--danger);
+padding:6px 12px;
+border-radius:6px;
+font-size:13px;
+text-decoration:none;
+}
+
+/* ledger table */
+
+.table-panel{
+background:#fff;
+border:1px solid var(--border-color);
+border-radius:10px;
+overflow:hidden;
+box-shadow:var(--shadow-sm);
+}
+
+.ledger-table{
+width:100%;
+border-collapse:collapse;
+}
+
+.ledger-table th{
+font-size:11px;
+text-transform:uppercase;
+letter-spacing:1px;
+color:var(--text-muted);
+padding:12px;
+border-bottom:2px solid var(--border-color);
+text-align:left;
+}
+
+.ledger-table td{
+padding:12px;
+border-bottom:1px solid var(--border-light);
+font-size:14px;
+}
+
+.ledger-table tr:hover{
+background:#fafbfc;
+}
+
+.total-value{
+font-weight:600;
+color:var(--primary);
+}
+
+.no-data{
+text-align:center;
+padding:40px;
+color:var(--text-muted);
+}
+
+</style>
+
+
+<div class="supplier-page">
+
+<!-- HEADER -->
+
+<div class="page-header">
+
+<h2 class="page-title">
+<i class="fas fa-truck"></i>
+{{ supplier.name }}
+</h2>
+
+<div style="display:flex;gap:10px;">
+
+<a href="{% url 'add_supplier_purchase' supplier.id %}" class="btn-add">
+<i class="fas fa-plus"></i> Add Purchase
+</a>
+
+<a href="{% url 'org_admin_suppliers' %}" class="btn-back">
+<i class="fas fa-arrow-left"></i> Back
+</a>
+
+</div>
+
+</div>
+
+
+<!-- SUPPLIER INFO -->
+
+<div class="info-panel">
+
+<div class="info-row">
+
+<div>
+<strong>Contact:</strong>
+{{ supplier.contact_person|default:"—" }}
+</div>
+
+<div>
+<strong>Phone:</strong>
+{{ supplier.phone|default:"—" }}
+</div>
+
+<div>
+<strong>Email:</strong>
+{{ supplier.email|default:"—" }}
+</div>
+
+</div>
+
+</div>
+
+
+<!-- SUMMARY -->
+
+<div class="summary-row">
+
+<div class="summary-card">
+<div class="summary-title">Total Medicines</div>
+<div class="summary-value">{{ medicines|length }}</div>
+</div>
+
+<div class="summary-card">
+<div class="summary-title">Total Quantity</div>
+<div class="summary-value">{{ total_quantity }}</div>
+</div>
+
+<div class="summary-card">
+<div class="summary-title">Total Purchase Value</div>
+<div class="summary-value">₹{{ total_value }}</div>
+</div>
+
+</div>
+
+
+<!-- FILTERS -->
+
+<form method="GET" class="filter-bar">
+
+<label>From</label>
+<input type="date" name="start_date" value="{{ start_date }}">
+
+<label>To</label>
+<input type="date" name="end_date" value="{{ end_date }}">
+
+<label>Month</label>
+<input type="month" name="month">
+
+<button type="submit" class="btn-filter">
+Filter
+</button>
+
+<a href="" class="btn-reset">
+Reset
+</a>
+
+</form>
+
+
+<!-- LEDGER -->
+
+<div class="table-panel">
+
+<table class="ledger-table">
+
+<thead>
+<tr>
+<th>Date</th>
+<th>Medicine</th>
+<th>Company</th>
+<th>Power</th>
+<th>Quantity</th>
+<th>Price</th>
+<th>Total</th>
+<th>Expiry</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for medicine in medicines %}
+
+<tr>
+
+<td>{{ medicine.created_at|date:"M d, Y" }}</td>
+<td>{{ medicine.name }}</td>
+<td>{{ medicine.company_name }}</td>
+<td>{{ medicine.power }}</td>
+<td>{{ medicine.quantity }}</td>
+<td>₹{{ medicine.price }}</td>
+
+<td class="total-value">
+₹{{ medicine.total }}
+</td>
+
+<td>{{ medicine.expiry_date }}</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="8" class="no-data">
+<i class="fas fa-inbox"></i><br>
+No supplier records found
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

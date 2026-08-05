@@ -3,7 +3,14 @@ media/
 staticfiles/
 __pycache__/
 *.pyc
+*.pyo
 .env
 venv/
+.venv/
 .idea/
 .vscode/
+*.egg-info/
+dist/
+build/
+.DS_Store
+*.log

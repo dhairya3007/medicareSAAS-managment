@@ -236,3 +236,114 @@ def add_user(request):
         return redirect("org_admin_users")
 
     return render(request, "org_admin/add_user.html")
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from store.decorators import org_admin_required
+from store.models import Supplier, Medicine
+from store.utils import get_user_organization
+
+
+@org_admin_required
+def supplier_detail(request, supplier_id):
+
+    org = get_user_organization(request)
+
+    supplier = get_object_or_404(
+        Supplier,
+        id=supplier_id,
+        organization=org
+    )
+
+    medicines = Medicine.objects.filter(
+        organization=org,
+        supplier=supplier
+    ).order_by("-created_at")
+
+    # Filters
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    month = request.GET.get("month")
+
+    if start_date:
+        medicines = medicines.filter(created_at__date__gte=start_date)
+
+    if end_date:
+        medicines = medicines.filter(created_at__date__lte=end_date)
+
+    if month:
+        year, month_num = month.split("-")
+
+        medicines = medicines.filter(
+            created_at__year=year,
+            created_at__month=month_num
+        )
+
+    # annotate row totals
+    medicines = medicines.annotate(
+        total=ExpressionWrapper(
+            F("quantity") * F("price"),
+            output_field=DecimalField()
+        )
+    )
+
+    total_quantity = medicines.aggregate(
+        total=Sum("quantity")
+    )["total"] or 0
+
+    total_value = medicines.aggregate(
+        total=Sum(
+            ExpressionWrapper(
+                F("quantity") * F("price"),
+                output_field=DecimalField()
+            )
+        )
+    )["total"] or 0
+
+    return render(
+        request,
+        "org_admin/supplier_detail.html",
+        {
+            "supplier": supplier,
+            "medicines": medicines,
+            "total_quantity": total_quantity,
+            "total_value": total_value,
+            "start_date": start_date,
+            "end_date": end_date,
+            "month": month
+        }
+    )
+
+@org_admin_required
+def add_supplier_purchase(request, supplier_id):
+
+    org = get_user_organization(request)
+
+    supplier = get_object_or_404(
+        Supplier,
+        id=supplier_id,
+        organization=org
+    )
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+        quantity = request.POST.get("quantity")
+        price = request.POST.get("price")
+
+        Medicine.objects.create(
+            organization=org,
+            supplier=supplier,
+            name=name,
+            quantity=int(quantity),
+            price=price
+        )
+
+        return redirect("supplier_detail", supplier_id=supplier.id)
+
+    return render(
+        request,
+        "org_admin/add_supplier_purchase.html",
+        {
+            "supplier": supplier
+        }
+    )

@@ -10,25 +10,41 @@ urlpatterns = [
     path('users/<int:user_id>/delete/', views.delete_user, name='org_admin_delete_user'),
 
     # Categories
-path('categories/', views.category_list, name='org_admin_categories'),
-path('categories/add/', views.add_category, name='org_admin_add_category'),
-path('categories/<int:category_id>/delete/', views.delete_category, name='org_admin_delete_category'),
+    path('categories/', views.category_list, name='org_admin_categories'),
+    path('categories/add/', views.add_category, name='org_admin_add_category'),
+    path('categories/<int:category_id>/delete/', views.delete_category, name='org_admin_delete_category'),
+    path('edit-category/<int:id>/', views.edit_category, name='org_admin_edit_category'),
+    # Suppliers
+    path('suppliers/', views.supplier_list, name='org_admin_suppliers'),
 
-# Suppliers
-path('suppliers/', views.supplier_list, name='org_admin_suppliers'),
-path('suppliers/add/', views.add_supplier, name='org_admin_add_supplier'),
-path('suppliers/<int:supplier_id>/delete/', views.delete_supplier, name='org_admin_delete_supplier'),
-path(
-    'suppliers/<int:supplier_id>/edit/',
-    views.edit_supplier,
-    name='org_admin_edit_supplier'
-),
+    path(
+        'suppliers/add/',
+        views.add_supplier,
+        name='org_admin_add_supplier'
+    ),
 
+    path(
+        'suppliers/<int:supplier_id>/',
+        views.supplier_detail,
+        name='supplier_detail'
+    ),
 
-path(
-    'categories/<int:category_id>/edit/',
-    views.edit_category,
-    name='org_admin_edit_category'
-),
+    path(
+        'suppliers/<int:supplier_id>/add/',
+        views.add_supplier_purchase,
+        name='add_supplier_purchase'
+    ),
+
+    path(
+        'suppliers/<int:supplier_id>/edit/',
+        views.edit_supplier,
+        name='org_admin_edit_supplier'
+    ),
+
+    path(
+        'suppliers/<int:supplier_id>/delete/',
+        views.delete_supplier,
+        name='org_admin_delete_supplier'
+    ),
 
 ]

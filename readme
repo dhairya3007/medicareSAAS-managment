@@ -48,3 +48,4 @@ Terminal 2 – Celery Worker
 Terminal 3 – Django Server
 
     python manage.py runserver
+python -m celery -A medical_shop worker --pool=solo -l info

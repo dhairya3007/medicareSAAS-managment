@@ -1,0 +1,24 @@
+<h2>Sales Report</h2>
+
+<p><strong>Period:</strong> {{ start_date }} to {{ end_date }}</p>
+<p><strong>Generated at:</strong> {{ generated_at }}</p>
+
+<table border="1" cellspacing="0" cellpadding="5">
+<tr>
+    <th>Order ID</th>
+    <th>User</th>
+    <th>Amount</th>
+    <th>Date</th>
+</tr>
+
+{% for order in orders %}
+<tr>
+    <td>{{ order.id }}</td>
+    <td>{{ order.user.username }}</td>
+    <td>{{ order.final_amount }}</td>
+    <td>{{ order.order_date }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>Total Revenue: ₹{{ total_revenue }}</h3>

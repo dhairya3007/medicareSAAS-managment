@@ -3,9 +3,10 @@
 {% block content %}
 
 <div class="card shadow-sm border-0" style="border-radius:14px;">
-    
+
     <div class="card-body p-4">
 
+        <!-- Page Title -->
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h4 class="mb-0">
                 <i class="fas fa-network-wired me-2 text-primary"></i>
@@ -13,23 +14,26 @@
             </h4>
         </div>
 
-        <!-- SEARCH BAR -->
+        <!-- Search Bar -->
         <form method="GET" class="mb-4">
             <div class="input-group input-group-lg">
+
                 <input 
-                    type="text" 
+                    type="text"
                     name="q"
                     value="{{ request.GET.q }}"
                     class="form-control"
                     placeholder="Search medicine across pharmacies..."
                 >
+
                 <button class="btn btn-primary">
                     <i class="fas fa-search me-1"></i> Search
                 </button>
+
             </div>
         </form>
 
-        <!-- RESULTS -->
+        <!-- Results Table -->
         {% if results %}
 
         <div class="table-responsive">
@@ -41,7 +45,6 @@
                         <th>Medicine</th>
                         <th>Pharmacy</th>
                         <th>Address</th>
-                        <th>Stock</th>
                         <th>Contact Person</th>
                         <th>Phone</th>
                     </tr>
@@ -50,40 +53,58 @@
                 <tbody>
 
                 {% for r in results %}
+
                 <tr>
 
+                    <!-- Medicine -->
                     <td>
                         <strong>{{ r.medicine }}</strong>
                     </td>
 
+                    <!-- Pharmacy -->
                     <td>
                         {{ r.pharmacy }}
                     </td>
 
-                    <td>
-                        <small class="text-muted">
+                    <!-- Address -->
+                    <td style="max-width:260px;">
+                        <a href="https://www.google.com/maps/search/{{ r.address }}" 
+                           target="_blank"
+                           class="text-decoration-none text-dark">
+
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
                             {{ r.address }}
-                        </small>
+
+                        </a>
                     </td>
 
-                    <td>
-                        <span class="badge bg-success">
-                            {{ r.quantity }}
-                        </span>
-                    </td>
-
+                    <!-- Contact Person -->
                     <td>
                         {{ r.contact_name }}
                     </td>
 
+                    <!-- Phone -->
                     <td>
+
+                        {% if r.phone and r.phone != "N/A" %}
+
                         <a href="tel:{{ r.phone }}" class="text-decoration-none">
-                            <i class="fas fa-phone me-1"></i>
+
+                            <i class="fas fa-phone text-primary me-1"></i>
                             {{ r.phone }}
+
                         </a>
+
+                        {% else %}
+
+                        <span class="text-muted">N/A</span>
+
+                        {% endif %}
+
                     </td>
 
                 </tr>
+
                 {% endfor %}
 
                 </tbody>
@@ -94,14 +115,20 @@
 
         {% elif request.GET.q %}
 
+        <!-- No Results -->
+
         <div class="text-center p-5 text-muted">
+
             <i class="fas fa-search fa-2x mb-3"></i>
-            <p>No pharmacy has this medicine in stock.</p>
+
+            <p>No pharmacy in the network currently has this medicine.</p>
+
         </div>
 
         {% endif %}
 
     </div>
+
 </div>
 
 {% endblock %}

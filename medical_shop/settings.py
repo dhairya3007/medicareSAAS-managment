@@ -10,26 +10,41 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+import dj_database_url
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# ─────────────────────────────────────────────────────────
+# SECURITY
+# ─────────────────────────────────────────────────────────
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-p(=03=h4vzr-@9ez6q0k7k0(=a3p2s2k^@lgp1#r45857wu%r3'
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-p(=03=h4vzr-@9ez6q0k7k0(=a3p2s2k^@lgp1#r45857wu%r3'
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='*',
+    cast=Csv()
+)
 
-import os
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:8000',
+    cast=Csv()
+)
 
-# Application definition
+# ─────────────────────────────────────────────────────────
+# APPLICATION DEFINITION
+# ─────────────────────────────────────────────────────────
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -49,22 +64,20 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ROOT_URLCONF = 'medical_shop.urls'
-from pathlib import Path
-# Update TEMPLATES configuration
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add this line
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,25 +93,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'medical_shop.wsgi.application'
 
+# ─────────────────────────────────────────────────────────
+# DATABASE
+# Reads DATABASE_URL env var automatically (set by Railway PostgreSQL plugin)
+# Falls back to local PostgreSQL for development
+# ─────────────────────────────────────────────────────────
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+DATABASE_URL = config(
+    'DATABASE_URL',
+    default='postgresql://postgres:9898794846@localhost:5432/medical_saas_prod'
+)
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "medical_saas",
-        "USER": "postgres",
-        "PASSWORD": "9898794846",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
+    'default': dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ─────────────────────────────────────────────────────────
+# PASSWORD VALIDATION
+# ─────────────────────────────────────────────────────────
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -115,47 +131,60 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# ─────────────────────────────────────────────────────────
+# INTERNATIONALIZATION
+# ─────────────────────────────────────────────────────────
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
+# ─────────────────────────────────────────────────────────
+# STATIC FILES  (WhiteNoise serves them in production)
+# ─────────────────────────────────────────────────────────
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-
-# Development static files (your local static folder)
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# Production static files (collectstatic will copy here)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# ─────────────────────────────────────────────────────────
+# MEDIA FILES
+# Note: Railway has ephemeral storage. For production,
+# consider Cloudinary. Uploads work until next redeploy.
+# ─────────────────────────────────────────────────────────
 
-
-# Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# ─────────────────────────────────────────────────────────
+# AUTH REDIRECTS
+# ─────────────────────────────────────────────────────────
 
-# Login redirect
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
+# ─────────────────────────────────────────────────────────
+# CELERY / REDIS
+# Reads REDIS_URL env var (set by Railway Redis plugin)
+# Falls back to localhost for local development
+# ─────────────────────────────────────────────────────────
+
+REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_BROKER_URL = REDIS_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+# ─────────────────────────────────────────────────────────
+# CORS
+# ─────────────────────────────────────────────────────────
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# ─────────────────────────────────────────────────────────
+# DEFAULT PRIMARY KEY
+# ─────────────────────────────────────────────────────────
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
