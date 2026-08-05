@@ -6,7 +6,6 @@ services:
     plan: free
     branch: main
     buildCommand: >
-      apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info &&
       pip install -r requirements.txt &&
       python manage.py collectstatic --noinput
     startCommand: python manage.py migrate && gunicorn medical_shop.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
