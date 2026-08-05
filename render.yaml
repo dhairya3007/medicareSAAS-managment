@@ -11,6 +11,7 @@ services:
     startCommand: >
       python manage.py migrate &&
       python manage.py create_superuser_if_not_exists &&
+      python manage.py seed_demo_data &&
       gunicorn medical_shop.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     healthCheckPath: /
     envVars:
