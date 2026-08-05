@@ -99,6 +99,12 @@ class Medicine(models.Model):
 
     low_stock_threshold = models.PositiveIntegerField(default=10)
 
+    def is_low_stock(self):
+        return self.quantity <= self.low_stock_threshold
+
+    def __str__(self):
+        return self.name
+        
     class Meta:
         unique_together = ('organization', 'product_number')
 
