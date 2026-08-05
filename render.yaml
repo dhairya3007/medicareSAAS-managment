@@ -10,11 +10,7 @@ services:
       python manage.py collectstatic --noinput
     startCommand: >
       python manage.py migrate &&
-      python manage.py shell -c "
-      from django.contrib.auth.models import User;
-      User.objects.filter(username='admin').exists() or
-      User.objects.create_superuser('admin', 'admin@admin.com', 'admin9898')
-      " &&
+      python manage.py create_superuser_if_not_exists &&
       gunicorn medical_shop.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     healthCheckPath: /
     envVars:
