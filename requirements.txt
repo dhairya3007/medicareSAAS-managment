@@ -23,3 +23,5 @@ urllib3==2.5.0
 whitenoise==6.11.0
 celery==5.4.0
 redis==5.2.1
+reportlab==4.2.5
+weasyprint==65.1

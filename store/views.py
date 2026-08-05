@@ -993,14 +993,11 @@ def switch_organization(request, org_id):
     if org:
         request.session["selected_org_id"] = org.id
     return redirect(request.META.get("HTTP_REFERER", "/"))
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
-from weasyprint import HTML
-from .models import Order
-
-
 def generate_invoice(request, order_id):
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+    from .models import Order
+
     org = get_user_organization(request)
 
     order = get_object_or_404(
@@ -1183,13 +1180,7 @@ def add_supplier_purchase(request, supplier_id):
         "org_admin/add_supplier_purchase.html",
         {"supplier": supplier}
     )
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from weasyprint import HTML
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.db.models import Sum
-from datetime import timedelta, datetime
+
 
 @login_required
 def download_sales_report(request):
