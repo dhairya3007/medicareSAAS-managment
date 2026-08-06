@@ -33,13 +33,13 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 20px;
     padding: 0.3rem 0.85rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255, 255, 255, 0.9);
     letter-spacing: 0.4px;
     margin-bottom: 1.25rem;
   }
@@ -53,7 +53,7 @@
   }
 
   .hero-subtitle {
-    color: rgba(255,255,255,0.78);
+    color: rgba(255, 255, 255, 0.78);
     font-size: 1.025rem;
     line-height: 1.65;
     margin: 0 0 2rem;
@@ -73,7 +73,11 @@
     transition: opacity 0.15s, transform 0.15s;
   }
 
-  .hero-cta:hover { opacity: 0.92; transform: translateY(-1px); color: var(--primary-dark); }
+  .hero-cta:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    color: var(--primary-dark);
+  }
 
   /* ── Search ── */
   .search-section {
@@ -118,7 +122,9 @@
     outline: none;
   }
 
-  .search-input::placeholder { color: var(--text-muted); }
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
 
   .search-btn {
     padding: 0 1.25rem;
@@ -135,7 +141,9 @@
     font-weight: 600;
   }
 
-  .search-btn:hover { opacity: 0.9; }
+  .search-btn:hover {
+    opacity: 0.9;
+  }
 
   /* ── Section header ── */
   .section-header {
@@ -159,7 +167,9 @@
     color: var(--text-muted);
   }
 
-  .search-result-info strong { color: var(--primary); }
+  .search-result-info strong {
+    color: var(--primary);
+  }
 
   /* ── Medicine Grid ── */
   .medicines-grid {
@@ -200,8 +210,13 @@
     object-fit: cover;
   }
 
-  .med-no-img { color: var(--text-muted); }
-  .med-no-img i { font-size: 2.25rem; }
+  .med-no-img {
+    color: var(--text-muted);
+  }
+
+  .med-no-img i {
+    font-size: 2.25rem;
+  }
 
   /* Stock badge */
   .stock-pill {
@@ -216,9 +231,23 @@
     text-transform: uppercase;
   }
 
-  .pill-in    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-  .pill-low   { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-  .pill-out   { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+  .pill-in {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+
+  .pill-low {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+  }
+
+  .pill-out {
+    background: #fef2f2;
+    color: var(--danger);
+    border: 1px solid #fecaca;
+  }
 
   /* Body */
   .med-body {
@@ -261,12 +290,11 @@
 
   .med-footer {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
     padding-top: 0.75rem;
     border-top: 1px solid var(--border-light);
-    margin-top: auto;
-    gap: 0.5rem;
   }
 
   .med-price {
@@ -286,7 +314,8 @@
 
   .med-actions {
     display: flex;
-    gap: 0.4rem;
+    width: 100%;
+    gap: 8px;
   }
 
   .btn-cart {
@@ -304,7 +333,10 @@
     font-size: 0.85rem;
   }
 
-  .btn-cart:hover { opacity: 0.9; transform: scale(1.07); }
+  .btn-cart:hover {
+    opacity: 0.9;
+    transform: scale(1.07);
+  }
 
   .btn-view {
     padding: 0 0.75rem;
@@ -323,7 +355,10 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  .btn-view:hover { background: #dbeafe; color: var(--primary); }
+  .btn-view:hover {
+    background: #dbeafe;
+    color: var(--primary);
+  }
 
   /* ── Empty / No-results state ── */
   .empty-state {
@@ -345,7 +380,10 @@
     margin: 0 auto 1.25rem;
   }
 
-  .empty-icon i { font-size: 1.75rem; color: var(--primary); }
+  .empty-icon i {
+    font-size: 1.75rem;
+    color: var(--primary);
+  }
 
   .empty-state h3 {
     font-family: 'DM Serif Display', serif;
@@ -354,7 +392,11 @@
     margin: 0 0 0.5rem;
   }
 
-  .empty-state p { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1.5rem; }
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
+  }
 
   .btn-view-all {
     display: inline-flex;
@@ -371,7 +413,10 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  .btn-view-all:hover { opacity: 0.9; color: #fff; }
+  .btn-view-all:hover {
+    opacity: 0.9;
+    color: #fff;
+  }
 
   /* ── Tablet (≤ 768px) ── */
   @media (max-width: 768px) {
@@ -379,24 +424,51 @@
       padding: 2.5rem 1rem 2rem;
       margin: -0.75rem -1rem 1.5rem;
     }
-    .hero-title  { font-size: 1.8rem; }
-    .hero-subtitle { font-size: 0.95rem; }
 
-    .search-section  { padding: 1.25rem 1rem; }
-    .search-section h2 { font-size: 1.2rem; }
+    .hero-title {
+      font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+      font-size: 0.95rem;
+    }
+
+    .search-section {
+      padding: 1.25rem 1rem;
+    }
+
+    .search-section h2 {
+      font-size: 1.2rem;
+    }
 
     .medicines-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 0.85rem;
     }
 
-    .med-img-wrap { height: 140px; }
-    .med-body { padding: 0.85rem 1rem; }
-    .med-name { font-size: 0.92rem; }
-    .med-price { font-size: 1.1rem; }
+    .med-img-wrap {
+      height: 140px;
+    }
 
-    .section-header { margin-bottom: 1rem; }
-    .section-title  { font-size: 1.25rem; }
+    .med-body {
+      padding: 0.85rem 1rem;
+    }
+
+    .med-name {
+      font-size: 0.92rem;
+    }
+
+    .med-price {
+      font-size: 1.1rem;
+    }
+
+    .section-header {
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+    }
   }
 
   /* ── Mobile (≤ 480px) ── */
@@ -406,17 +478,40 @@
       margin: -0.75rem -1rem 1.25rem;
       border-radius: 0;
     }
-    .hero-badge  { font-size: 0.72rem; }
-    .hero-title  { font-size: 1.55rem; }
-    .hero-subtitle { font-size: 0.875rem; margin-bottom: 1.5rem; }
-    .hero-cta   { padding: 0.7rem 1.5rem; font-size: 0.875rem; }
 
-    .search-section { padding: 1rem; border-radius: var(--radius-md); }
-    .search-box { flex-direction: column; border-radius: var(--radius-md); }
+    .hero-badge {
+      font-size: 0.72rem;
+    }
+
+    .hero-title {
+      font-size: 1.55rem;
+    }
+
+    .hero-subtitle {
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-cta {
+      padding: 0.7rem 1.5rem;
+      font-size: 0.875rem;
+    }
+
+    .search-section {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+    }
+
+    .search-box {
+      flex-direction: column;
+      border-radius: var(--radius-md);
+    }
+
     .search-input {
       border-radius: var(--radius-md) var(--radius-md) 0 0;
       border-bottom: 1px solid var(--border-color);
     }
+
     .search-btn {
       width: 100%;
       justify-content: center;
@@ -433,135 +528,187 @@
     .med-card {
       flex-direction: row;
     }
+
     .med-img-wrap {
       width: 110px;
       height: auto;
       flex-shrink: 0;
       border-radius: 0;
     }
-    .med-body { padding: 0.85rem 0.9rem; }
-    .med-name { font-size: 0.9rem; }
-    .med-company { font-size: 0.78rem; margin-bottom: 0.4rem; }
-    .med-components { font-size: 0.72rem; margin-bottom: 0.65rem; }
-    .med-price { font-size: 1rem; }
-    .btn-cart, .btn-view { height: 32px; font-size: 0.78rem; }
-    .btn-cart { width: 32px; }
 
-    .empty-state { padding: 3rem 1.25rem; }
+    .med-body {
+      padding: 0.85rem 0.9rem;
+    }
+
+    .med-name {
+      font-size: 0.9rem;
+    }
+
+    .med-company {
+      font-size: 0.78rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .med-components {
+      font-size: 0.72rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .med-price {
+      font-size: 1rem;
+    }
+
+    .btn-cart,
+    .btn-view {
+      height: 32px;
+      font-size: 0.78rem;
+    }
+
+    .btn-cart {
+      width: 32px;
+    }
+
+    .empty-state {
+      padding: 3rem 1.25rem;
+    }
+
+    .med-price {
+      width: 100%;
+    }
+
+    .med-actions form {
+      flex: 0 0 36px;
+    }
+
+    .btn-cart {
+      width: 36px;
+      height: 36px;
+    }
+
+    .btn-view {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      white-space: nowrap;
+    }
+
   }
 </style>
 
 <!-- Hero -->
 <div class="home-hero">
-    <div class="hero-inner">
-        <div class="hero-badge">
-            <i class="fas fa-shield-alt"></i>Trusted Healthcare Platform
-        </div>
-        <h1 class="hero-title">Your Health, Our Priority</h1>
-        <p class="hero-subtitle">Discover quality medicines and healthcare products at affordable prices. Fast, reliable, and secure.</p>
-        <a href="#medicines" class="hero-cta">
-            <i class="fas fa-pills"></i>Shop Medicines
-        </a>
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <i class="fas fa-shield-alt"></i>Trusted Healthcare Platform
     </div>
+    <h1 class="hero-title">Your Health, Our Priority</h1>
+    <p class="hero-subtitle">Discover quality medicines and healthcare products at affordable prices. Fast, reliable,
+      and secure.</p>
+    <a href="#medicines" class="hero-cta">
+      <i class="fas fa-pills"></i>Shop Medicines
+    </a>
+  </div>
 </div>
 
 <!-- Search -->
 <div class="search-section" id="medicines">
-    <h2 class="text-center">Find Your Medicines</h2>
-    <form method="GET" action="{% url 'home' %}">
-        <div class="search-box">
-            <input type="text" name="q" class="search-input" placeholder="Search by name, brand, or component…" value="{{ query }}" autocomplete="off">
-            <button type="submit" class="search-btn">
-                <i class="fas fa-search"></i><span>Search</span>
-            </button>
-        </div>
-    </form>
+  <h2 class="text-center">Find Your Medicines</h2>
+  <form method="GET" action="{% url 'home' %}">
+    <div class="search-box">
+      <input type="text" name="q" class="search-input" placeholder="Search by name, brand, or component…"
+        value="{{ query }}" autocomplete="off">
+      <button type="submit" class="search-btn">
+        <i class="fas fa-search"></i><span>Search</span>
+      </button>
+    </div>
+  </form>
 </div>
 
 <!-- Results Section -->
 <div class="section-header">
-    <h2 class="section-title">
-        {% if request.GET.q %}Search Results{% else %}All Medicines{% endif %}
-    </h2>
-    {% if request.GET.q %}
-    <span class="search-result-info">
-        {% if medicines %}
-            {{ medicines|length }} result{{ medicines|length|pluralize }} for <strong>"{{ request.GET.q }}"</strong>
-        {% endif %}
-    </span>
+  <h2 class="section-title">
+    {% if request.GET.q %}Search Results{% else %}All Medicines{% endif %}
+  </h2>
+  {% if request.GET.q %}
+  <span class="search-result-info">
+    {% if medicines %}
+    {{ medicines|length }} result{{ medicines|length|pluralize }} for <strong>"{{ request.GET.q }}"</strong>
     {% endif %}
+  </span>
+  {% endif %}
 </div>
 
 {% if medicines %}
 <div class="medicines-grid">
-    {% for medicine in medicines %}
-    <div class="med-card">
-        <div class="med-img-wrap">
-            {% if medicine.image %}
-                <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}" loading="lazy">
-            {% else %}
-                <div class="med-no-img"><i class="fas fa-pills"></i></div>
-            {% endif %}
+  {% for medicine in medicines %}
+  <div class="med-card">
+    <div class="med-img-wrap">
+      {% if medicine.image %}
+      <img src="{{ medicine.image.url }}" alt="{{ medicine.name }}" loading="lazy">
+      {% else %}
+      <div class="med-no-img"><i class="fas fa-pills"></i></div>
+      {% endif %}
 
-            {% if medicine.quantity <= 5 and medicine.quantity > 0 %}
-                <span class="stock-pill pill-low">Low Stock</span>
-            {% elif medicine.quantity > 0 %}
-                <span class="stock-pill pill-in">In Stock</span>
-            {% else %}
-                <span class="stock-pill pill-out">Out of Stock</span>
-            {% endif %}
-        </div>
-
-        <div class="med-body">
-            <h3 class="med-name">{{ medicine.name }}</h3>
-            <p class="med-company">{{ medicine.company_name }}</p>
-            <span class="med-components">
-                <i class="fas fa-flask" style="font-size:0.7rem;"></i>{{ medicine.components }}
-            </span>
-
-            <div class="med-footer">
-                <div class="med-price">
-                    ₹{{ medicine.price }}
-                    <small>per unit</small>
-                </div>
-                <div class="med-actions">
-                    <form method="post" action="{% url 'add_to_cart' medicine.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-cart" title="Add to Cart">
-                            <i class="fas fa-cart-plus"></i>
-                        </button>
-                    </form>
-                    <a href="/medicine/{{ medicine.id }}/" class="btn-view">
-                        <i class="fas fa-eye"></i>View
-                    </a>
-                </div>
-            </div>
-        </div>
+      {% if medicine.quantity <= 5 and medicine.quantity> 0 %}
+        <span class="stock-pill pill-low">Low Stock</span>
+        {% elif medicine.quantity > 0 %}
+        <span class="stock-pill pill-in">In Stock</span>
+        {% else %}
+        <span class="stock-pill pill-out">Out of Stock</span>
+        {% endif %}
     </div>
-    {% endfor %}
+
+    <div class="med-body">
+      <h3 class="med-name">{{ medicine.name }}</h3>
+      <p class="med-company">{{ medicine.company_name }}</p>
+      <span class="med-components">
+        <i class="fas fa-flask" style="font-size:0.7rem;"></i>{{ medicine.components }}
+      </span>
+
+      <div class="med-footer">
+        <div class="med-price">
+          ₹{{ medicine.price }}
+          <small>per unit</small>
+        </div>
+        <div class="med-actions">
+          <form method="post" action="{% url 'add_to_cart' medicine.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-cart" title="Add to Cart">
+              <i class="fas fa-cart-plus"></i>
+            </button>
+          </form>
+          <a href="/medicine/{{ medicine.id }}/" class="btn-view">
+            <i class="fas fa-eye"></i>View
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 {% else %}
 <div class="empty-state">
-    <div class="empty-icon"><i class="fas fa-search"></i></div>
-    <h3>No medicines found</h3>
-    <p>
-        {% if request.GET.q %}
-            No results for "{{ request.GET.q }}". Try different search terms.
-        {% else %}
-            No medicines available right now. Check back soon.
-        {% endif %}
-    </p>
-    <a href="/" class="btn-view-all"><i class="fas fa-store"></i>View All</a>
+  <div class="empty-icon"><i class="fas fa-search"></i></div>
+  <h3>No medicines found</h3>
+  <p>
+    {% if request.GET.q %}
+    No results for "{{ request.GET.q }}". Try different search terms.
+    {% else %}
+    No medicines available right now. Check back soon.
+    {% endif %}
+  </p>
+  <a href="/" class="btn-view-all"><i class="fas fa-store"></i>View All</a>
 </div>
 {% endif %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.querySelector('.search-input');
     if (searchInput && !searchInput.value) {
-        setTimeout(() => searchInput.focus(), 400);
+      setTimeout(() => searchInput.focus(), 400);
     }
-});
+  });
 </script>
 {% endblock %}
