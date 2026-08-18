@@ -1966,7 +1966,7 @@ def ai_assistant(request):
 
             "reply": (
 
-                "🤖 AI PHARMACY INTELLIGENCE ASSISTANT\n\n"
+                "🤖 LOCAL PHARMACY INTELLIGENCE ASSISTANT\n\n"
 
                 "I can help you with:\n\n"
 

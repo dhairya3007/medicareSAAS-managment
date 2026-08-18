@@ -399,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     color: #dc2626;
                 ">
                     ⚠ SYSTEM ERROR<br><br>
-                    AI Assistant failed to respond.
+                    Local Assistant failed to respond.
                 </div>
             `;
 
