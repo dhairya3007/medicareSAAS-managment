@@ -2,6 +2,7 @@
 echo "Running migrations..."
 python manage.py migrate --noinput
 python manage.py create_superuser_if_not_exists
+python manage.py seed_demo_data
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
