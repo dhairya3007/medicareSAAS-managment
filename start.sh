@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "Running migrations..."
 python manage.py migrate --noinput
+python manage.py create_superuser_if_not_exists
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
