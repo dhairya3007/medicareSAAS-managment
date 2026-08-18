@@ -549,6 +549,17 @@
             }
         }
         
+        .main-content {
+            max-width: 1400px;
+            padding: 0 1.75rem;
+            margin: 0 auto;
+        }
+        @media (max-width: 991px) {
+            .main-content { padding: 0 1rem; }
+        }
+        @media (max-width: 480px) {
+            .main-content { padding: 0 0.5rem; }
+        }
     </style>
 </head>
 <body>
@@ -674,7 +685,7 @@
     </div>
 </nav>
 
-<div class="container-fluid mt-3" style="max-width:1400px; padding: 0 1.75rem;">
+<div class="container-fluid mt-3 main-content">
     {% if messages %}
     <div class="django-messages">
         {% for message in messages %}

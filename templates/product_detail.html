@@ -8,10 +8,15 @@
     background: #f0f4f8;
     min-height: 100vh;
     padding: 2rem 0 4rem;
+    margin: -1rem -1.75rem 0;
     font-family: 'DM Sans', sans-serif;
   }
 
   .pd-container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+  @media (max-width: 991px) {
+    .pd-page { margin: -1rem -1rem 0; }
+  }
 
   /* Breadcrumb */
   .pd-breadcrumb {
@@ -39,6 +44,13 @@
 
   @media (max-width: 768px) {
     .pd-main { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .pd-page { margin: -1rem -0.5rem 0; padding: 1.5rem 0 3rem; }
+    .pd-container { padding: 0 0.75rem; }
+    .pd-image-panel { padding: 1.5rem; min-height: 280px; }
+    .pd-details-panel { padding: 1.5rem; }
   }
 
   /* Image Panel */
