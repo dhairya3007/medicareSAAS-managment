@@ -8,33 +8,20 @@ services:
     buildCommand: >
       pip install -r requirements.txt &&
       python manage.py collectstatic --noinput
-    startCommand: >
-      python manage.py migrate &&
-      python manage.py create_superuser_if_not_exists &&
-      python manage.py seed_demo_data &&
-      gunicorn medical_shop.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    startCommand: bash start.sh
     healthCheckPath: /
     envVars:
       - key: SECRET_KEY
-        value: django-render-blueprint-p03h4vzr9ez6q0k7k0a3p2s2k-prod-2024-secure
+        generateValue: true
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: medicare-saas.onrender.com,localhost
+        value: "*"
       - key: CSRF_TRUSTED_ORIGINS
         value: https://medicare-saas.onrender.com
       - key: PYTHON_VERSION
         value: "3.11.9"
       - key: DATABASE_URL
-        fromDatabase:
-          name: medicare-saas-db
-          property: connectionString
+        sync: false
       - key: REDIS_URL
-        value: redis://localhost:6379/0
-
-databases:
-  - name: medicare-saas-db
-    databaseName: medicare_saas_prod
-    region: oregon
-    plan: free
-    postgresMajorVersion: 16
+        sync: false
