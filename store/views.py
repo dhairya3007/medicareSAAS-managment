@@ -1184,6 +1184,11 @@ def add_supplier_purchase(request, supplier_id):
 
 @login_required
 def download_sales_report(request):
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+    from django.utils import timezone
+    from datetime import timedelta
+
     org = get_user_organization(request)
 
     # 📅 GET FILTERS
